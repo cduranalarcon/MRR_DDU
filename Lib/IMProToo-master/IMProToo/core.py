@@ -1582,7 +1582,7 @@ class MrrZe:
         saveAlsoNonDealiased = self.co["dealiaseSpectrum_saveAlsoNonDealiased"] and self.co["dealiaseSpectrum"]
 
         if pyNc:
-            cdfFile = nc.Dataset(fname, "w", format=ncForm)
+            cdfFile = nc.Dataset(fname, "w",unlimited_dims={'time':True}, format=ncForm)
         else:
             cdfFile = nc.NetCDFFile(fname, "w")
 
@@ -1597,7 +1597,7 @@ class MrrZe:
         cdfFile.mrrHeader = str(self.header)
 
         # make frequsnions
-        cdfFile.createDimension('time', int(self.no_t))
+        cdfFile.createDimension('time', None) #MODIFIED by CLAUDIO . Original: cdfFile.createDimension('time', int(self.no_t))
         cdfFile.createDimension('range', int(self.no_h))
         cdfFile.createDimension('velocity', int(self.no_v))
         if saveAlsoNonDealiased:
@@ -1901,7 +1901,7 @@ class mrrProcessedData:
                 nc, pyNc = _get_netCDF_module(ncForm=ncForm)
 
                 if pyNc:
-                    cdfFile = nc.Dataset(fname, "r", format=ncForm)
+                    cdfFile = nc.Dataset(fname, "r",unlimited_dims={'time':True}, format=ncForm)
                 else:
                     cdfFile = nc.NetCDFFile(fname, "r")
 
@@ -2235,7 +2235,7 @@ class mrrProcessedData:
         nc, pyNc = _get_netCDF_module(ncForm=ncForm)
 
         if pyNc:
-            cdfFile = nc.Dataset(fileOut, "w", format=ncForm)
+            cdfFile = nc.Dataset(fileOut, "w", unlimited_dims={'time':True}, format=ncForm)
         else:
             cdfFile = nc.NetCDFFile(fileOut, "w")
 
@@ -2398,7 +2398,7 @@ class mrrRawData:
                 nc, pyNc = _get_netCDF_module(ncForm=ncForm)
 
                 if pyNc:
-                    cdfFile = nc.Dataset(fname, "r", format=ncForm)
+                    cdfFile = nc.Dataset(fname, "r",unlimited_dims={'time':True}, format=ncForm)
                 else:
                     cdfFile = nc.NetCDFFile(fname, "r")
 
@@ -2732,7 +2732,7 @@ class mrrRawData:
         nc, pyNc = _get_netCDF_module(ncForm=ncForm)
 
         if pyNc:
-            cdfFile = nc.Dataset(fileOut, "w", format=ncForm)
+            cdfFile = nc.Dataset(fileOut, "w",unlimited_dims={'time':True}, format=ncForm)
         else:
             cdfFile = nc.NetCDFFile(fileOut, "w")
 
