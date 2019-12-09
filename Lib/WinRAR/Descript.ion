@@ -1,0 +1,25 @@
+7zxa.dll             Librería de descompresión 7z
+Default.SFX          Módulo SFX gráfico para Windows
+descript.ion         Descripción de los ficheros
+Licencia.rtf         Licencia de uso y destribución
+Novedades.txt        Novedades de esta versión
+Order.htm            Información de registro
+Rar.exe              Consola RAR
+rar.lng              Idioma castellano para el RAR
+Rar.txt              Manual de la consola de RAR
+RarLng.dll           Recursos de idiomas
+RarExt.dll           Integración WinRAR con el Explorador de Windows
+RarExt.lng           Idioma castellano para RarExt.dll
+RarExt64.dll         Integración WinRAR con el Explorador de Windows (Windows x64)
+RarFiles.lst         Orden de organización para ficheros sólidos
+ReadMe.txt           Breve vista rápida de WinRAR
+Uninstall.exe        Programa de desinstalación
+Uninstall.lng        Idioma castellano para el programa de desinstlación
+Uninstall.lst        Lista de desinstalación
+UnRAR.exe            Utilidad gratuíta para descomprimir ficheros RAR
+WinCon.SFX           Módulo de autoextracción
+WinRAR.exe           WinRAR
+WinRAR.chm           Archivo de ayuda WinRAR
+winrar.lng           Idioma castellano para el WinRAR
+Zip.SFX              Módulo de autoextracción gráfico para ficheros ZIP
+UNACEV2.DLL          Librería de descompresión ACE
