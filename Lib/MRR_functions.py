@@ -4,11 +4,13 @@
 ##
 ##check_RawFiles: reads raw files line by line and remove extrange characteres (frequent problem in Windows)
 ## 
-##raw2snow: Process raw files using Maahn and Kollias method
+##raw2snow: Process raw files using Maahn and Kollias method (2012)
 ##
 ##MRRQlooks: Make figures of Doppler momments
 ##
 ##Time_integ: Temporal integration of processed MRR data
+##
+##densplot: Compute and plot the joint distribution (e.g. probability of variable vs. height)
 ##
 ##By: Claudio Duran-ALarcon IGE
 ##
@@ -308,8 +310,8 @@ def save_Time_integ(file_out,tres = 1, mat = None, station=""):
         root_grp.close() 
     else:
         print "Data matrix not found!"
-   
 
+#####
 def densplot(x,y,title="a)",bins = None, vmax = None, Range = None):
     import numpy as np
     import pylab
