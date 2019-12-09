@@ -1,0 +1,2565 @@
+
+
+                                Manual de Usuario
+                                ~~~~~~~~~~~~~~~~~
+                             RAR 5.40 versión consola
+                             ~~~~~~~~~~~~~~~~~~~~~~~~
+
+                           =-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+                           ¡Bienvenido al compresor RAR!
+                           -=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+ Introducción
+ ~~~~~~~~~~~~
+
+    RAR es una aplicación para consola que permite manejar archivos comprimidos
+  desde la línea de órdenes. RAR permite comprimir, cifrar, recuperar datos y
+  otras muchas funcionalidades descritas en este manual.
+
+    RAR soporta solo archivos en formato RAR, que tiene la extensión .rar por
+  defecto. No soporta el formato ZIP ni otros formatos. Aunque especifique la
+  extensión .zip al crear un archivo este estará en formato RAR. Los usuarios de
+  Windows pueden instalar WinRAR, que soporta mas tipos de archivos, incluyendo
+  los formatos RAR y ZIP.
+
+    WinRAR proporciona ambas interfaz de usuario, la gráfica y la de línea de
+  órdenes. Aunque la versión de consola RAR y la versión para entorno gráfico
+  WinRAR tienen una sintaxis de línea de ordenes similar , existen varias
+  diferencias. Le recomendamos que use este manual (Rar.txt) para la versión de
+  consola RAR y la ayuda de WinRAR (winrar.chm) para WinRAR.
+
+
+ Fichero de configuración
+ ~~~~~~~~~~~~~~~~~~~~~~~~
+
+  RAR y UnRAR para Unix leen la información de configuración desde el fichero
+  .rarrc, en el directorio anfitrión del usuario (almacenado en la
+  variable de entorno HOME) o en el directorio /etc.
+
+  RAR y UnRAR para Windows leen la información de configuración desde el fichero
+  rar.ini, ubicado en el mismo directorio que el fichero RAR.exe
+
+  Este fichero puede contener la siguiente cadena:
+
+  switches=<cualquier modificador RAR, separado por espacios>
+
+  Por ejemplo:
+
+  switches=-m5 -s
+
+  También es posible especificar modificadores específicos para ordenes RAR
+  concretas usando la siguiente sintaxis:
+  
+  switches_<orden>=<cualquier modificador RAR, separado por espacios>
+  
+  Por ejemplo:
+  
+  switches_a=-m5 -s
+  switches_x=-o+
+  
+  
+
+ Variables de entorno
+ ~~~~~~~~~~~~~~~~~~~~
+
+  Los modificadores predefinidos pueden ser añadidos a la línea de ordenes de
+  RAR a través de la variable de entorno "RAR".
+
+  Por ejemplo, en UNIX las siguientes líneas pueden añadirse a su perfil:
+
+     RAR='-s -md1024'
+     export RAR
+
+  RAR usará esta cadena como modificador predefinido en la línea de ordenes y
+  creará archivos "sólidos" con un tamaño de diccionario de 1024 KB.
+
+  RAR maneja los modificadores con la siguiente prioridad:
+
+     modificadores en la línea de ordenes                       máxima prioridad
+     modificadores en la variable RAR                           menor prioridad
+     modificadores guardados en el fichero de configuración     mínima prioridad
+
+
+ Fichero de registro (Log)
+ ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Si el modificador -ilog se específica en la línea de ordenes o en el
+  fichero de configuración, RAR escribe mensajes informativos dentro del
+  fichero de registro, sobre los errores encontrados al procesar archivos.
+  Para más detalles vea el modificador de lectura -ilog.
+
+
+ Lista de organización de archivos sólidos - rarfiles.lst
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Rarfiles.lst contiene una lista de ficheros, definidos por el usuario,
+  que indica a RAR el orden en el que se deben añadir los ficheros dentro de
+  un archivo sólido. Puede contener nombres de fichero, comodines y entradas
+  especiales - $default. La entrada default define el lugar de colocación
+  de los ficheros no coincidentes en la lista, con otras entradas en este
+  fichero. El carácter del comentario es ';'.
+
+  En Windows este fichero debe estar ubicado en el mismo directorio que RAR
+  o en el directorio %APPDATA%\WinRAR, en Unix - en el directorio anfitrión
+  del usuario o en el directorio /etc.
+
+  Consejos para mejorar la compresión y velocidad de la operación:
+
+  - los ficheros similares deben estar agrupados en el archivo;
+  - los ficheros a los que se accede con frecuencia deben estar al principio.
+
+  Normalmente las máscaras colocadas en lo más alto de la lista tienen una mayor
+  prioridad. Pero hay una excepción a esta regla, si rarfiles.lst contiene dos
+  máscaras en las que hay ficheros que coinciden tanto con una máscara como con
+  la otra, la máscara que contiene el subconjunto más pequeño de nombres de
+  fichero, tendrá una prioridad superior, a pesar de su posición dentro de la
+  lista. Por ejemplo, si tiene las máscaras *.cpp y f*.cpp, f*.cpp tendrá mayor
+  prioridad, de manera que la posición del 'nombrefichero.cpp' será seleccionado
+  de acuerdo a 'f*.cpp', y no a '*.cpp'.
+
+
+ Sintaxis de la línea de ordenes RAR
+ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+ Sintaxis
+
+    RAR <orden>  [ -<modificadores> ]  <archivo>  [ <@listaficheros...> ]
+        [ <ficheros...> ]  [ <ruta_para_extraer\> ]
+
+ Descripción
+
+    Las opciones de la línea de ordenes (ordenes y modificadores) proporcionan
+    un control de creación y administración de archivos con RAR. La orden es
+    una cadena (o una sola letra) que ordena a RAR a realizar una acción. Los
+    modificadores están diseñados para modificar la forma en que RAR realizará
+    esta acción. Otros modificadores son el nombre del archivo y los ficheros
+    para ser archivados dentro o extraídos desde el archivo.
+
+    Listfiles son ficheros de texto plano que contienen los nombres de los
+    ficheros a procesar. Los nombres de fichero deben comenzar en la primera
+    columna. Puede poner comentarios al listfile después de // caracteres.
+    Por ejemplo, puede crear backup.lst conteniendo las siguientes cadenas:
+
+    c:\work\doc\*.txt         //backup de documentos de texto
+    c:\work\image\*.bmp       //backup de imágenes
+    c:\work\misc
+
+    y entonces ejecutar:
+
+       rar a backup @backup.lst
+
+    Si desea leer los nombres de fichero introducidos de forma estándar
+    (standard input), no ponga nombre al listfile (simplemente ponga @).
+
+    Por defecto, la versión para consola de RAR usa la codificación de un solo
+    byte en los ficheros de la lista pero puede ser redefinida con el
+    modificador -sc<juego>l.
+
+    Puede especificar en la misma línea de órdenes, los nombres de ficheros
+    habituales y los ficheros de la lista. Si no se especifican los ficheros de
+    listfiles, entonces se usa implícitamente *.* y RAR procesa todos los
+    ficheros.
+
+    Muchas ordenes RAR, como extraer, verificar o listar, permiten el uso de
+    comodines en los nombres de archivo. Si no se especifica la extensión en la
+    máscara de archivo, RAR asume que es .rar, así * significa todos los
+    archivos con extensión .rar. Si necesita procesar todos los archivos sin
+    extensión utilice la máscara "*.". La máscara *.* selecciona todos los
+    ficheros con cualquier extensión. Al comprimir y eliminar no se permite el
+    uso de comodines en la máscara.
+
+    En UNIX necesita encerrar con comillas las opciones que contengan comodines
+    para evitar la expansión del shell. Por ejemplo, esta orden extraerá los
+    ficheros *.asm de un archivo RAR en la carpeta actual:
+
+       rar e '*.rar' '*.asm'
+
+
+    Las órdenes podrían ser cualquiera de las siguientes:
+
+    a       Añadir ficheros al archivo.
+
+            Ejemplos:
+
+             1) añadir todos los ficheros *.hlp del directorio actual al
+            archivo ayuda.rar:
+
+            rar a ayuda *.hlp
+
+            2) añadir todos los ficheros del directorio actual y sus
+            subdirectorios en archivos sólidos, auto-extraíbles y partidos
+            en volúmenes de 362000 bytes con un registro de
+            recuperación a cada volumen:
+
+            rar a -r -v362 -s -sfx -rr save
+
+            Al no especificar que ficheros hay que añadir se asume que
+            hay que añadirlos todos (*).
+
+            3) como excepción especial, si se especifica el nombre de
+            una carpeta como argumento sin especificar ninguna mascara
+            de ficheros ni barra final, el contenido entero de la carpeta
+            y sus subcarpetas se añadirán al archivo incluso si no se
+            ha especificado el modificador -r.
+
+            La siguiente orden añadirá todos los ficheros de la carpeta
+            Imágenes y sus subcarpetas al archivo Fotos.rar:
+
+            rar a Fotos.rar Imágenes
+
+            4) Si el nombre de la carpeta incluye mascara de ficheros o
+            una barra final se aplican las normas usuales de forma que
+            para incluir las subcarpetas necesita añadir el modificador -r.
+
+            La siguiente orden añadirá todos los ficheros de la carpeta
+            Imágenes pero no sus subcarpetas ya que no se ha especificado
+            el modificador -r:
+
+            rar a Fotos.rar Imagenes\*
+
+
+    c       Añadir comentario de archivo. Los comentarios se muestran mientras
+            se procesa el archivo. La longitud del comentario está limitada a
+            256 KB.
+
+            Ejemplos:
+
+            rar c distrib.rar
+
+            Asimismo los comentarios pueden añadirse desde un fichero usando el
+            modificador -z[fichero].
+
+            La siguiente orden añade un comentario desde el fichero info.txt:
+
+            rar c -zinfo.txt dummy
+
+
+    ch      Cambiar modificadors del archivo.
+
+            Esta orden se puede usar con la mayoría de modificadores para
+            modificar los modificadors del archivo. Es muy conveniente con
+            modificadores, como: -cl, -cu, -tl, que no disponen de una orden
+            exclusiva.
+
+            Si no puede recomprimir, (de)codificar los datos del archivo
+            y no puede fusionar o crear volúmenes. Use la orden 'ch'
+            sin modificadores, copiará simplemente los datos del archivo
+            sin ninguna modificación.
+
+            Ejemplo:
+
+            Establecer la hora del archivo al último fichero:
+
+            rar ch -tl files.rar
+
+
+    cw      Escribir un comentario de archivo en el fichero especificado.
+
+            El formato del fichero de salida depende del modificador -sc
+
+            Si el nombre del fichero de destino no se especifica el
+            comentario se enviara a la salida estándar (stdout).
+
+            Ejemplos:
+
+            1) rar cw arc comment.txt
+
+            2) rar cw -scuc arc unicode.txt
+
+            3) rar cw arc
+
+
+    d       Eliminar ficheros del archivo. Tenga en cuenta que si al procesar
+            esta orden, se eliminan todos los ficheros del archivo, el archivo
+            vacío será eliminado.
+
+
+    e       Extraer ficheros sin trayectorias.
+
+            Extraer ficheros sin incluir su trayectoria, de forma que todos los
+            ficheros se crean en el mismo directorio de destino.
+
+            Use la orden 'x' si desea extraer los ficheros con su trayectoria.
+
+            Ejemplo:
+
+            rar e -or html.rar *.css css\
+
+            extraer todos los ficheros *.css del archivo html.rar a la
+            carpeta 'css' excluyendo las trayectorias archivadas y renombra los
+            ficheros extraídos automáticamente si varios ficheros tienen el
+            mismo nombre.
+
+
+    f       Actualizar ficheros del archivo. Actualiza los ficheros modificados
+            desde la última vez en que se empaquetaron. Esta orden no permite
+            añadir nuevos ficheros al archivo.
+
+
+   i[i|c|h|t]=<cadena>
+            Buscar cadena en los archivos.
+
+            Soporta los siguientes modificadors opcionales:
+
+              i - búsqueda simple (predefinida);
+
+              c - búsqueda avanzada;
+
+              h - búsqueda hexadecimal;
+
+              t - usar ANSI, tablas Unicode y caracteres OEM (sólo Windows);
+
+            Si no se especifican modificadors, es posible usar la sintaxis
+            de modificadores simplificada i<cadena> en lugar de i=<cadena>
+
+            Se puede especificar el modificador 't' con otros modificadors,
+            por ejemplo, cadena=ict realiza una búsqueda avanzada, usando
+            las tablas de caracteres antes mencionadas.
+
+            Ejemplos:
+
+            1) rar "ic=primer nivel" -r c:\*.rar *.txt
+
+            Realiza la búsqueda avanzada de la cadena "primer nivel" en los
+            ficheros *.txt de los archivos *.rar ubicados en el disco c:
+
+            2) rar ih=f0e0aeaeab2d83e3a9 -r e:\textos
+
+            Búsqueda por cadena hexadecimal f0 e0 ae ae ab 2d 83 e3 a9
+            en los archivos rar ubicados en e:\directorio de textos.
+
+
+    k       Bloquear el archivo. Cualquier orden que intente cambiar el
+            archivo será ignorado.
+
+            Ejemplo:
+
+            rar k final.rar
+
+
+    l[t[a],b]
+            Listar contenido del archivo [técnico [todo], simple].
+
+            La orden 'l' lista los atributos, tamaño, fecha, hora y nombre de
+            los ficheros comprimidos, uno por cada línea. Si el fichero está
+            cifrado, la línea empieza con el carácter '*'.
+
+            'lt' lista información detallada de cada fichero en modo multilínea.
+            Esta información incluye los valores de la suma de control, sistema
+            operativo anfitrión, opciones de compresión y otros modificadors.
+
+            'lta' proporciona información detallada no solo de los ficheros si
+            no también de las cabeceras de servicio como flujos NTFS o
+            información de seguridad de los ficheros.
+
+            'lb' lista solo los nombres de fichero con su trayectoria, uno por
+            línea, sin ninguna información adicional.
+
+            Puede usar el modificador -v para listar el contenido de todos los
+            volúmenes de un conjunto de volúmenes usando por ejemplo:
+
+            rar -l v vol.part1.rar
+
+            Las órdenes 'lt', 'lta' y 'lb' equivalen a 'vt', 'vta' y 'vb'
+            respectivamente.
+
+    m[f]    Mover al archivo [sólo ficheros]. El movimiento de ficheros y
+            directorios en ficheros y directorios, da como resultado su borrado
+            al completarse con éxito la operación de empaquetado. Los
+            directorios no se eliminan si se usa el modificador 'f' y/o se
+            aplica el modificador '-ed'.
+
+
+    p       Imprimir fichero por la salida predeterminada (stdout).
+
+            Puede usar esta orden junto con el modificador -inul para
+            desactivar todos los mensajes de RAR e imprimir sólo los datos
+            del fichero. Puede ser importante cuando necesita enviar un
+            fichero canalizado por la salida predeterminada.
+
+
+    r       Reparar un archivo. La reparación de archivos se realiza en dos
+            fases. Primero se busca el registro de recuperación del archivo
+            dañado (véase la orden 'rr'). Si el archivo contiene un registro
+            de recuperación y la porción de los datos dañados es continua y
+            menor que el tamaño de código de corrección de errores en el
+            registro de recuperación, la probabilidad de reconstrucción del
+            archivo es muy alta. Una vez completada esta fase, se creará un
+            nuevo archivo, llamado fixed.arcname.rar, donde 'arcname' es el
+            nombre de archivo original (dañado).
+
+            Si un archivo dañado no contiene un registro de recuperación o si el
+            archivo no está completamente recuperado debido a un daño mayor, se
+            realizará una segunda fase. Durante esta fase sólo se reconstruirá
+            la estructura del archivo y si aún así, es imposible recuperar los
+            ficheros debido a un fallo en la validación de la suma de control,
+            todavía es posible recuperar ficheros no dañados que eran
+            inaccesibles debido a daños en la estructura del archivo. Esto es
+            especialmente útil en archivos que no son sólidos. Esta fase nunca
+            es eficiente para archivos con cabeceras de fichero cifradas, que
+            solo pueden repararse si esta presente el registro de recuperación.
+
+            Una vez completada la segunda fase, el archivo reconstruido se
+            guardará como rebuilt.arcname.rar, donde 'arcname' es el nombre
+            original del archivo.
+
+            Por defecto, los archivos reparados se crean en la carpeta actual,
+            pero puede añadir una trayectoria opcional para especificar otra
+            carpeta de destino.
+
+            Ejemplo:
+
+            rar r dañado.rar c:\reparado\
+
+            reparar dañado.rar y dejar el resultado en la carpeta c:\reparado.
+
+
+    rc      Reconstruir volúmenes perdidos y dañados usando volúmenes de
+            recuperación (ficheros .rev). Necesitará especificar cualquier
+            volumen existente como nombre del archivo, por ejemplo,
+            'rar rc backup.part03.rar'
+
+            Lea la descripción de la orden 'rv' para la recuperación de
+            volúmenes.
+
+
+    rn      Renombrar ficheros comprimidos.
+
+            La sintaxis de la orden es:
+
+            rar rn <arcname> <srcname1> <destname1> ... <srcnameN> <destnameN>
+
+            Por ejemplo, la siguiente orden:
+
+            rar rn data.rar readme.txt readme.bak info.txt info.bak
+
+            Renombra readme.txt como readme.bak e info.txt como info.bak
+            en el archivo data.rar.
+
+            Se permite usar comodines en los nombres de origen y destino,
+            para conversiones simples de nombre, de forma similar al cambio
+            de extensiones de ficheros. Por ejemplo:
+
+            rar rn data.rar *.txt *.bak
+
+            se renombrarán todos los ficheros *.txt como *.bak.
+
+            RAR no verifica si el nombre del fichero de destino, ya existe
+            en el archivo, así que necesitará tener cuidado para no usar
+            nombres duplicados. Esto es muy importante cuando se usan
+            comodines. Esta orden es potencialmente peligrosa, porque un
+            comodín equivocado puede corromper todos los nombres archivados.
+
+
+    rr[N]   Añadir registro de recuperación de datos. Opcionalmente, se puede
+            añadir a un archivo información redundante  (registro de
+            recuperación). Aunque causa un pequeño incremento del tamaño del
+            archivo le ayudará a recuperar ficheros dañados por errores de
+            disco o perdidas de datos de cualquier otro tipo siempre que los
+            daños no sean muy severos. Esta recuperación de daños se puede
+            hacer con la orden "r" (reparar).
+
+            Los archivos RAR 4.x y RAR 5.0 usan diferentes estructuras y
+            algoritmos para el registro de recuperación de daños.
+
+            El registro de recuperación de daños de RAR 4.x esta basado en el
+            algoritmo XOR. Puede especificar el tamaño del registro de
+            recuperación 4.x como el número de sectores o como un porcentaje
+            sobre el tamaño del archivo. Para especificar el número de sectores
+            añádalo directamente a continuación de 'rr', por ejemplo 'rr1000'
+            para 1000 sectores. Para usar un porcentaje añada el modificador
+            'p' o '%' después del porcentaje, por ejemplo, 'rr5p' o 'rr5%' para
+            un 5%. Tenga en cuenta que en ficheros .bat y .cmd de Windows es
+            necesario usar 'rr5%%' en vez de 'rr5%', debido a que el procesador
+            de ordenes trata un solo '%' como el inicio de un modificador, de
+            forma que quizá sea más conveniente usar 'p' en vez de '%' en estos
+            casos.
+
+            Los registros de recuperación RAR 4.x tienen un tamaño de 512 bytes.
+            Si el área dañada es continua, cada sector ayuda a recuperar 512
+            bytes de información dañada. Este valor puede ser menor en casos con
+            daños múltiples. El número máximo de sectores de recuperación es
+            de 524288.
+
+            El tamaño del registro de recuperación 4.x puede determinarse
+            aproximadamente como <tamaño del archivo>/256 + <número de sectores
+            de recuperación>*512 bytes.
+
+            El registro RAR 5.0 no usa sectores de 512 bytes y solo puede
+            especificar su tamaño como un porcentaje respecto al tamaño del
+            archivo. Incluso si el modificador '%' o 'p' no está presente, RAR
+            trata este valor como un porcentaje en el caso de formato de archivo
+            RAR 5.0, de forma que tanto 'rr5' como 'rr5p' significan 5%.
+            Debido a los datos adicionales requeridos el tamaño resultante solo
+            se aproxima al porcentaje definido por el usuario, siendo la
+            diferencia mayor en archivos pequeños.
+
+            El tamaño del registro de recuperación RAR 5.0 no puede superar el
+            tamaño del archivo a proteger, así que no es posible usar mas de
+            100% como modificador. Los registros de recuperación grandes se
+            procesan de forma más lenta tanto al crear como al reparar.
+
+            El registro de recuperación RAR 5.0 es mas resistente a daños en
+            el propio registro de recuperación y puede usar un registro de
+            recuperación parcialmente dañado. Tenga en cuenta que la orden de
+            reparar 'R' no arregla bloques dañados en el registro de
+            recuperación, solo los datos de los ficheros son corregidos.
+            Después de un proceso de reparación exitoso puede que necesite crear
+            de nuevo los registros de recuperación para los ficheros
+            recuperados.
+
+            Tanto los registros 4.x como los 5.0 son mas eficientes si las
+            posiciones de los daños en el archivo no están desplazadas. Si copia
+            el archivo desde un medio dañado usando algún tipo de programa
+            especial y le da la posibilidad de escoger entre rellenar las
+            áreas dañadas con ceros o no incluir estas áreas en el fichero,
+            es preferible escoger la opción de rellenarlas con ceros o con
+            cualquier otro valor porque esto permite preservar las posiciones
+            originales de los datos. De todas formas, incluso no siendo el modo
+            más óptimo, ambas versiones de registros intentan reparar los datos
+            incluso cuando se han producido eliminaciones o inserciones de
+            tamaño razonable que han producido desplazamientos en las posiciones
+            de los datos. El registro de recuperación RAR 5.0 maneja estos
+            casos mas eficientemente que RAR 4.x.
+
+            Si usa la orden 'rr' sin especificar el tamaño, RAR establecerá
+            por defecto el tamaño del registro de recuperación al 3% del tamaño
+            del archivo.
+
+            Por ejemplo:
+
+            rar rr5p nombrearchivo
+
+            Añade un registro de recuperación del 5% del tamaño del archivo.
+
+
+    rv[N]   Crear volúmenes de recuperación (ficheros .rev), pueden usarse
+            más tarde para reconstruir ficheros perdidos y dañados, en un
+            volumen determinado. Esta orden sólo tiene sentido, usando
+            archivos multi-volúmenes, y necesita especificar como nombre
+            de archivo, el del primer volumen del conjunto. Por ejemplo:
+
+            rar rv3 data.part01.rar
+
+            Esta característica puede ser útil para copias de seguridad o,
+            por ejemplo, cuando envía por correo un archivo multi-volumen
+            a un grupo de noticias (newsgroup), y una parte de los
+            suscriptores, dice que le falta alguno de los ficheros.
+            Los volúmenes de recuperación reenviados, en lugar de los
+            volúmenes habituales, puede reducir el número total de
+            ficheros a reenviar por correo.
+
+            Cada volumen de recuperación es capaz de reconstruir un volumen
+            RAR perdido o dañado. Por ejemplo, si tiene 30 volúmenes y
+            3 volúmenes de recuperación, podrá reconstruir cualquiera de
+            los 3 volúmenes perdidos. Pero si el número de ficheros .rev
+            es menor que el número de volúmenes perdidos, la reconstrucción
+            no será posible. El número total de volúmenes usados y recuperados
+            no puede exceder de 255 para RAR 4.x y de 65535 para el formato
+            RAR 5.0.
+
+            Los volúmenes RAR originales no deben ser modificados, una vez
+            creados los volúmenes de recuperación. Los datos usados por el
+            algoritmo de recuperación, son almacenados en los ficheros REV
+            y en los volúmenes RAR, para reconstruir volúmenes RAR perdidos.
+            Por ejemplo, si modifica volúmenes RAR y los bloquea, después de
+            crear los ficheros REV, el proceso de recuperación fracasará.
+
+            Además de para recuperar datos, los volúmenes de recuperación
+            RAR 5.0 también almacenan información de servicio como las sumas
+            de control de los ficheros RAR protegidos, de forma que son
+            ligeramente más grandes que los volúmenes RAR que protegen. Si
+            piensa copiar volúmenes individuales RAR y REV al mismo medio
+            extraíble necesita tener en cuenta y especificar el tamaño de los
+            volúmenes RAR unos cuantos kilobytes menor que el espacio total
+            del medio extraíble.
+
+            El modificador opcional <N> específica el número de volúmenes de
+            recuperación a crear, y debe ser menor que el número total de
+            volúmenes RAR del conjunto. Puede también añadir el símbolo del
+            porcentaje o el carácter 'p' a este modificador, en tal caso el
+            número de ficheros .rev creados, será igual al del porcentaje del
+            número total de volúmenes RAR.
+            
+            Por ejemplo:
+
+            rar rv15% data.part01.rar
+
+            RAR reconstruye volúmenes perdidos y dañados, usando la orden 'rc'
+            o de forma automática, si no puede localizar el siguiente volumen,
+            y halla el número requerido de ficheros .rev para desempaquetarlos.
+
+            Las copias originales de los volúmenes dañados son renombradas antes
+            de la reconstrucción como *.bad. Por ejemplo, volname.part03.rar
+            será renombrado como volname.part03.rar.bad
+
+
+    s[nombre] Convertir un archivo en SFX. El archivo es fusionado con un módulo
+            SFX (usando el fichero default.sfx o el modificador especificado).
+            En la versión de Windows, el fichero default.sfx debe colocarse en
+            el mismo directorio que rar.exe, en Unix - en el directorio
+            anfitrión del usuario, en /usr/lib o /usr/local/lib.
+
+    s-      Eliminar el módulo SFX de un archivo SFX existente. RAR crea un
+            nuevo archivo sin el módulo SFX, pero el archivo SFX original no se
+            eliminará.
+
+    t       Verificar los ficheros después de comprimir. Esta orden realiza
+            una extracción falsa del fichero, sin escribir nada en el flujo de
+            salida, permitiendo validar el/los fichero(s) especificado(s).
+
+            Ejemplos:
+
+            Verifica los archivos en el directorio actual:
+
+            rar t *
+
+            o en Unix:
+
+            rar t '*'
+
+            Verificar los archivos en todos los sub-directorios, comenzando con
+            la ruta actual:
+
+            rar t -r *
+
+            o en Unix:
+
+            rar t -r '*'
+
+
+    u       Actualizar ficheros del archivo. Añade ficheros al archivo y
+            actualiza los que han sufrido alguna variación, desde la última vez
+            en que se empaquetaron.
+
+
+
+    v[t[a],b]
+            Listado detallado del contenido del archivo [técnico [todo], simple]
+
+            La orden 'v' lista los atributos, tamaño, tamaño comprimido, ratio
+            de compresión, fecha, hora, suma de control y nombre de los ficheros
+            comprimidos, uno por cada línea. Si el fichero está cifrado, la
+            línea empieza con el carácter '*'. Para las sumas de control
+            BLAKE2sp solo se muestra los dos primeros símbolos y el último.
+
+            'vt' lista información detallada de cada fichero en modo multilínea.
+            Esta información incluye los valores de la suma de control, sistema
+            operativo anfitrión, opciones de compresión y otros modificadors.
+
+            'vta' proporciona información detallada no solo de los ficheros si
+            no también de las cabeceras de servicio como flujos NTFS o
+            información de seguridad de los ficheros.
+
+            'vb' lista solo los nombres de fichero con su trayectoria, uno por
+            línea, sin ninguna información adicional.
+
+            Puede usar el modificador -v para listar el contenido de todos los
+            volúmenes de un conjunto de volúmenes usando por ejemplo:
+
+            rar -v v vol.part1.rar
+
+            Las órdenes 'vt', 'vta' y 'vb' equivalen a 'lt', 'lta' y 'lb'
+            respectivamente.
+
+
+    x       Extraer ficheros con ruta completa.
+
+            Ejemplo:
+
+            1) extraer el fichero 10cents.txt en la carpeta actual sin mostrar
+               el comentario de archivo
+
+               rar x -c- dime 10cents.txt
+
+            2) extraer los ficheros *.txt de docs.rar en la carpeta c:\docs
+
+               rar x docs.rar *.txt c:\docs\
+
+            3) extraer todo el contenido de docs.rar en la carpeta actual
+
+               rar x docs.rar
+
+
+    Modificadores (usados en conjunción con una orden):
+
+
+    -?      Muestra la ayuda de ordenes y modificadores. Lo mismo que cuando
+            no se introduce nada o se introduce un modificador ilegal en la
+            línea de órdenes.
+
+
+    --      Detener análisis de modificadores
+
+            Este modificador le indica a RAR que no hay más modificadores en la
+            línea de órdenes. Podría ser útil, si cada nombre de archivo o
+            fichero comenzará desde el carácter '-' . Sin el modificador '--' el
+            nombre sería tomado como un modificador.
+
+            Ejemplo:
+
+            Puede añadir todos los ficheros del directorio actual al archivo
+            sólido '-NombreRaro'
+
+            RAR a -s -- -NombreRaro
+
+    -@[+]   Activar [desactivar] lista de ficheros
+
+            RAR trata los modificadors de la línea de órdenes que empiezan con
+            el carácter '@' como listas de ficheros. Así de forma predeterminada
+            RAR intenta leer la lista de ficheros de 'nombrefichero' cuando
+            encuentra el modificador '@nombrefichero'. Pero si existe el fichero
+            '@nombrefichero' RAR interpreta el modificador como el nombre de
+            fichero '@nombrefichero' en vez de leer la lista de ficheros.
+
+            El modificador -@[+] permite desambiguar este comportamiento y
+            determinar exactamente como procesar los modificadors que empiezan
+            con el carácter '@'.
+
+            Si usa -@ todos los modificadors de este tipo encontrados a
+            continuación de este modificador serán considerados nombres de
+            fichero y no listas de ficheros.
+
+            Si usa -@+ todos los modificadors de este tipo encontrados a
+            continuación de este modificador serán considerados listas de
+            ficheros y no nombres de fichero.
+
+            Este modificador no afecta a los modificadors anteriores a él.
+
+            Ejemplo:
+
+            verificar el fichero comprimido '@casa'
+
+            rar t - notas.rar @casa
+
+
+    -ac     Quitar el atributo de archivo después de la compresión o extracción
+            (Sólo para Windows).
+
+            Si se especifica este modificador al comprimir el atributo "Archivo"
+            de los ficheros se desactiva para aquellos ficheros comprimidos
+            correctamente. Al extraer, este modificador desactiva el atributo
+            "Archivo" para los ficheros extraídos.
+
+
+    -ad     Añadir nombre de archivo a la ruta de destino.
+
+            Este modificador es útil cuando se desempaqueta un grupo de
+            archivos. RAR predefinidamente coloca los ficheros en el mismo
+            directorio, pero este modificador crea directorios distintos para
+            los ficheros desempaquetados de cada archivo.
+
+            Ejemplo:
+
+            rar x -ad *.rar data\
+
+            RAR creará subdirectorios debajo de la carpeta 'data' para cada
+            archivo desempaquetado.
+
+
+    -ag[formato]
+            Generar un nombre de archivo usando la fecha y hora actual.
+
+            Añade la cadena fecha actual al nombre de archivo al crearlo o
+            procesarlo. Esto es útil para realizar copias de seguridad.
+
+            El formato de la cadena añadida es definido por el modificador
+            opcional "formato" o por "YYYYMMDDHHMMSS" si este modificador
+            está ausente. El formato de la cadena puede incluir los siguientes
+            caracteres:
+
+            Y   - año
+            M   - mes
+            MMM - nombre del mes como cadena de texto (Ene, Feb, etc.)
+            W   - número de orden de la semana (la semana se inicia con el
+                  Lunes)
+            A   - número del día de la semana (Lunes= 1, Domingo= 7)
+            D   - día del mes
+            E   - día del año
+            H   - horas
+            M   - minutos (tratado como minutos si se encuentra después de las
+                  horas)
+            I   - minutos (tratado como minutos independientemente de la
+                  posición de las horas)
+            S   - segundos
+            N   - número del archivo. RAR busca los archivos ya existentes con
+                  nombre generado y si lo encuentra, incrementa el número de
+                  archivos hasta que genera un único nombre. Este especificador
+                  de formato no esta soportado al crear archivos multi-volumen.
+                  Al realizar operaciones diferentes a la compresión, como la
+                  extracción, RAR selecciona el archivo existente que precede
+                  al primer nombre no usado o establece N a 1 si no existe.
+
+            Cada uno de los caracteres del formato de la cadena listados arriba,
+            representa sólo un carácter añadido al nombre de archivo. Por
+            ejemplo, usar WW para definir dos dígitos del número de orden de la
+            semana o YYYY para definir los cuatro dígitos del año.
+
+            Si el primer carácter en el formato de la cadena es '+', las
+            posiciones de la cadena fecha y nombre de archivo base son
+            intercambiadas, así que la fecha precederá a un nombre de archivo.
+
+            El formato de la cadena puede contener un texto opcional incluido
+            dentro de caracteres '{' y '}'. Este texto está insertado dentro
+            del nombre del archivo.
+
+            Todos los demás caracteres se añaden a un nombre de archivo sin
+            cambios.
+
+            Si necesita procesar un archivo ya existente, tenga cuidado con
+            el modificador -ag. Dependiendo del formato de cadena y del tiempo
+            pasado desde la última vez que uso -ag, los nombres de archivo
+            generados y los existentes pueden descuadrarse. En este caso RAR
+            creará o abrirá un archivo nuevo en lugar de procesar el ya
+            existente. Puede usar el modificador -log para escribir el nombre de
+            archivo generado en un fichero para poder así leerlo y procesarlo
+            posteriormente
+
+            Ejemplos:
+
+            1) usa el formato predefinido YYYYMMDDHHMMSS
+
+               rar a -ag backup
+
+            2) usa el formato DD-MMM-YY
+
+               rar t -agDD-MMM-YY backup
+
+            3) usa el formato YYYYMMDDHHMM, colocando la fecha antes de 'backup'
+
+               rar a -ag+AAAAMMDDHHMM backup
+
+            4) usa el formato YYYY-WW-A, incluyendo la descripción de los campos
+
+               rar a -agYYYY{year}-WW{week}-A{wday} backup
+
+            5) usa YYYYMMDD y el número de archivo. Esto permite generar nombres
+               únicos aún cuando la máscara del formato YYYYMMDD se haya usado
+               más de una vez el mismo día
+
+               rar a -agYYYYMMDD-NN backup
+
+
+    -ai     Ignorar atributos de fichero.
+
+            Al usar este modificador al extraer, RAR no establecerá los
+            atributos generales de los ficheros a los almacenados en el archivo
+            RAR. Este modificador mantiene los atributos asignados por el
+            sistema operativo a los ficheros nuevos.
+
+            Si se usa este modificador al comprimir, en vez de almacenar los
+            atributos actuales se almacenan valores predefinidos tipicos para
+            ficheros y carpetas.
+
+            En Windows afecta a los atributos de archivado, sistema, oculto
+            y solo lectura. En Unix afecta a los permisos de usuario, grupo
+            y otros.
+
+
+    -ao     Añadir los ficheros con el atributo Archivo activado
+            (sólo para Windows).
+
+            Ejemplo:
+
+            Añade todos los ficheros con el atributo Archivo activado de
+            'f:backup' al disco C: y elimina los ficheros con el atributo
+            Archivo
+
+            rar a -r -ac -ao f:backup c:\*.*
+
+
+    -ap     Establecer la ruta dentro del archivo. Al añadir ficheros a un
+            archivo, esta ruta se funde con el nombre del fichero, eliminando
+            los nombres del fichero al extraer.
+
+            Por ejemplo, puede añadir el fichero 'readme.txt' al directorio
+            'DOCS\ENG' del archivo 'release', para ello ejecute:
+
+            rar a -apDOCS\ENG release readme.txt
+
+            o extraer 'ENG' al directorio actual:
+
+            rar x -apDOCS release DOCS\ENG\*.*
+
+
+    -as     Sincronizar contenidos del archivo
+
+            Si este modificador se usa al comprimir, estos ficheros archivados
+            que no están presentes en la lista de ficheros actualmente añadidos,
+            se suprimirán del archivo. Es conveniente usar este modificador en
+            combinación con -u (actualización), para sincronizar los contenidos
+            del archivo y los del directorio de compresión.
+
+            Por ejemplo, después de la orden:
+
+            rar a -u -as backup sources\*.cpp
+
+            el archivo 'backup.rar' sólo contendrá los ficheros *.cpp del
+            directorio 'sources', todos los demás ficheros serán eliminados
+            del archivo. Es similar a crear un nuevo archivo, pero con una
+            importante excepción: si no se ha modificado ningún fichero desde
+            la última copia de seguridad, la operación se realizará mucho más
+            rápida que la creación de un archivo nuevo.
+
+
+    -cfg-   Ignorar el fichero de configuración y la variable de entorno RAR.
+
+
+    -cl     Convertir nombres de ficheros en minúsculas.
+
+
+    -cu     Convertir nombres de ficheros en mayúsculas.
+
+
+    -c-     No mostrar comentarios.
+
+
+    -df     Eliminar los ficheros tras la compresión
+
+            Mover ficheros al archivo. Este modificador en combinación con
+            la orden "A" realiza la misma acción que la orden "M".
+
+
+    -dh     Abrir los ficheros compartidos
+
+            Permite procesar ficheros abiertos por otras aplicaciones para
+            escribir.
+
+            Este modificador ayuda si una aplicación permite el acceso de
+            lectura al fichero, pero si todos los tipos de acceso al fichero
+            están prohibidos, la operación de apertura del fichero fracasará.
+
+            Este modificador podría ser peligrosa, porque permite el acceso de
+            lectura al archivo de un fichero, que al mismo tiempo fue modificado
+            por otra aplicación, así es que úselo con cuidado.
+
+
+    -dr     Mover ficheros a la Papelera tras la compresión
+
+            Eliminar ficheros después de comprimir enviándolos a la Papelera
+            de Windows. Solo esta disponible en la versión para Windows.
+
+
+    -ds     No ordenar ficheros al añadir a un archivo sólido
+
+
+    -dw     Limpiar y eliminar ficheros tras la compresión
+
+            Eliminar ficheros después de comprimir. Los ficheros son
+            sobrescritos con ceros para prevenir la recuperación de datos,
+            además son truncados y renombrados con nombres temporales antes de
+            eliminarlos.
+
+            Por favor, tenga en cuenta que esta técnica esta diseñada para
+            discos duros normales y puede no sobrescribir los datos originales
+            en discos de estado sólido como resultado de la tecnología SSD wear
+            leveling y los esquemas de dirección de datos más complejos usados
+            por estos discos.
+
+    -ed     No añadir directorios vacíos
+
+            Este modificador indica a RAR que no guarde registros del directorio
+            en el archivo creado. Al extraer esos archivos, basándose en las
+            rutas de los ficheros contenidos en ellos, RAR crea directorios con
+            datos. La información sobre los directorios vacíos se perderá. Todos
+            los atributos de los directorios con datos, excepto (derechos de
+            acceso, flujos de datos, etc...) se perderán igualmente, así es que
+            use sólo este modificador si no necesita conservar tal información.
+
+            Si usa -ed con la orden 'm' o con el modificador -df, RAR no
+            eliminará los directorios vacíos.
+
+
+    -en     No añadir bloque de "final de archivo"
+
+            No está soportado en el formato de archivo RAR 5.0.
+
+            Predefinidamente, RAR añade un bloque de "final de archivo" al
+            final de un archivo nuevo o actualizado. Se permite omitir datos
+            externos como las firmas digitales de seguridad, pero en algunos
+            casos especiales, puede ser útil desactivar esta característica.
+            Por ejemplo, si un archivo se transfiere entre dos sistemas mediante
+            enlaces poco confiables, y a la vez un remitente le añade nuevos
+            ficheros, es importante estar seguro de que entre sesiones de
+            transferencias, la parte del fichero ya recibida no pueda ser
+            modificada por la otra parte.
+
+            Este modificador no puede usarse con volúmenes, porque el bloque
+            de final de archivo contiene información importante para el
+            correcto procesado del volumen.
+
+
+    -ep     Excluir rutas de los nombres. Este modificador permite añadir
+            ficheros a un archivo sin incluir la información de la ruta.
+            Puede dar resultado a que algunos ficheros existentes en el
+            archivo tengan el mismo nombre.
+
+            Si se usa al extraer se ignoran las rutas originales para los
+            ficheros extraídos, de forma que todos los ficheros se crean en la
+            misma carpeta de destino.
+
+
+    -ep1    Excluir el directorio raíz de los nombres. No guarda o extrae la
+            ruta introducida en la línea de órdenes.
+
+            Ejemplo:
+
+            todos los ficheros y directorios del directorio tmp serán añadidos
+            al archivo 'test', pero la ruta de nombres archivados no incluirá
+            'tmp\'
+
+            1) añadir todos los ficheros y carpetas de la carpeta 'tmp' al
+               archivo 'test', pero no guarda la ruta 'tmp\' en los nombres de
+               fichero:
+
+               rar a -ep1 -r test tmp\*
+
+               Esto equivale a las órdenes:
+
+               cd tmp
+               rar a -r ..\test
+               cd ..
+
+            2) extraer los ficheros que coinciden con la máscara 'images\*' en
+               la carpeta 'dest\' pero sin crear la carpeta 'images\':
+
+               rar x -ep1 data images\* dest\
+
+
+    -ep2    Expandir las rutas al completo. Guarda las rutas completas del
+            fichero al comprimir (excepto la letra de unidad y el separador que
+            encabezan la ruta).
+
+    -ep3    Expandir las rutas al completo incluyendo la letra de unidad.
+            Sólo para versiones Windows.
+
+            Este modificador guarda las rutas al completo del fichero incluyendo
+            la letra de unidad al comprimir. Los separadores de unidad (los dos
+            puntos) son modificados por líneas de caracteres subrayados.
+
+            Si usa -ep3 al extraer, cambiará las líneas subrayadas por los dos
+            puntos y creará archivos originales desempaquetados en sus discos y
+            directorios. Si el usuario especifica una ruta de destino, será
+            ignorada.
+
+            También convierte trayectorias UNC de \\servidor\compartido a
+            __servidor\compartido al comprimir y las restaura al estado original
+            al descomprimir
+
+            Este modificador le puede ayudar a crear una copia de seguridad del
+            mismo archivo en varios discos. Por ejemplo, si ejecuta:
+
+            rar a -ep3 -r backup.rar c:\ d:\ e:\
+
+            creará una copia de seguridad, y si usa:
+
+            rar x -ep3 backup.rar
+
+            restaurará la copia de seguridad.
+
+            Sea prudente y use sólo - ep3 si tiene la seguridad de que al
+            extraer el archivo no contiene archivos maliciosos. En otras
+            palabras, úselo si ha creado un archivo usted mismo o confía
+            plenamente en su autor. Este modificador le permite sobrescribir
+            cualquier fichero de su PC incluyendo ficheros importantes del
+            sistema y normalmente debe usarse con fines a realizar copias de
+            seguridad y restauraciones.
+
+
+    -e[+]<atri>
+            Excluir o incluir ficheros según sus atributos.
+
+            <atri> es un número en sistema decimal, (empieza por '0')
+            o en formato hexadecimal (empieza por '0x').
+
+            Predefinidamente sin el símbolo '+', el modificador que define
+            la máscara a excluir antes del <atri>. Si el resultado de dígitos
+            binarios (Y) entre <atri> y los atributos del fichero difiere
+            de cero, el fichero no se procesará.
+
+            Si el símbolo '+' está presente, especifica que la máscara está
+            incluida. Sólo estos ficheros, que tienen al menos un atributo
+            especificado en la máscara, serán procesados.
+
+            En versiones de Windows se pueden usar los símbolos D, S, H, A y R,
+            en lugar de una máscara digital, para representar los directorios y
+            ficheros de sistema, ocultos y con atributos de solo lectura.
+            La instrucción dada para los atributos no es muy significativa.
+            Las versiones de Unix soportan los símbolos D y V para definir los
+            directorios y los atributos del dispositivo.
+
+            Se permite especificar - e attr > y - e + attr > en la misma línea
+            de órdenes.
+
+            Ejemplos:
+
+            1) registrar sólo nombres de directorio sin su contenido
+
+               rar a -r -e+d dirs
+
+            2) no comprimir ficheros de sistema y ocultos:
+
+               rar a -esh files
+
+            3) no extraer ficheros de solo lectura:
+
+               rar x -er files
+
+
+    -f      Actualizar ficheros. Puede ser usado con la extracción o creación
+            del archivo.
+            La cadena "a -f" es equivalente a la orden 'f', puede usar
+            también el modificador '-f' con las ordenes 'm' o 'mf'. Si se usa
+            el modificador '-f' con las ordenes 'x' o 'e', entonces se
+            cambiarán los ficheros antiguos con nuevas versiones extraídas del
+            archivo.
+
+
+    -hp[p]  Codificar cabeceras y datos del fichero.
+
+            Este modificador es similar a -p[p], pero el modificador -p codifica
+            sólo los datos del fichero y deja otra información, como los nombres
+            de fichero visibles. Este modificador codifica todas las áreas
+            sensibles del archivo, incluyendo datos del fichero, nombres,
+            tamaños, atributos, comentarios y otros bloques, proporcionando un
+            nivel más alto de seguridad. Sin la contraseña es imposible ver,
+            incluso la lista de ficheros, en un archivo codificado con - hp.
+
+
+            Ejemplo:
+
+            rar a -hpfGzq5yKw secret report.txt
+
+            Añadirá el fichero report.txt al archivo codificado
+            secret.rar usando la contraseña 'fGzq5yKw'
+
+    -ht[b|c]
+            Seleccionar el tipo de algoritmo [BLAKE2,CRC32] para la suma de
+            control.
+
+            La integridad de los datos de los ficheros en archivos RAR esta
+            protegida por sumas de control calculadas y almacenadas para cada
+            fichero almacenado.
+
+            Por defecto, RAR usa el algoritmo CRC32 para calcular la suma de
+            control. El formato de archivo RAR 5.0 también permite
+            seleccionar el algoritmo BLAKE2sp además del CRC32.
+
+            Especifique -htb para BLAKE2sp y -htc para el algoritmo CRC32.
+            Ya que CRC32 es el algoritmo predefinido, solo necesitará usar
+            -htc para anular -htb en la configuración de RAR.
+
+            El tamaño de la suma CRC32 es de 32 bits. Mientras que las
+            propiedades del CRC32 son adecuadas para detectar la mayoría de
+            los errores unintencionados, no es suficientemente confiable como
+            para verificar la identidad de un fichero. En otras palabras, si
+            dos ficheros tienen el mismo CRC32, esto no garantiza que el
+            contenido de los dos ficheros sea idéntico.
+
+            El tamaño de la suma BLAKE2sp es de 256 bits. Siendo un algoritmo
+            criptográficamente mas fuerte prácticamente garantiza que si dos
+            ficheros tienen la misma suma BLAKE2sp, su contenido es el mismo.
+            La faceta de detección de errores de BLAKE2sp es además mucho mas
+            confiable que la del CRC32.
+
+            Debido a que el tamaño del valor BLAKE2sp es mayor, el tamaño
+            resultante del archivo también es ligeramente mayor al usar el
+            modificador -htb.
+
+            Si las cabeceras de archivo no están cifradas (no se usa el
+            modificador -hp), las sumas de control en ficheros cifrados RAR 5.0
+            se modifican usando un algoritmo que depende de la contraseña
+            para hacer imposible que se pueda adivinar el contenido del fichero
+            basándose en la suma de control. No espere que estas sumas de
+            control cifradas se parezcan a los valores habituales del CRC32
+            y BLAKE2sp.
+
+            Este modificador esta soportado solo para el formato RAR 5.0, así
+            que es necesario usar también el modificador -ma.
+
+            Puede ver las sumas de control de los ficheros comprimidos usando
+            las órdenes 'vt' o 'lt'.
+
+
+            Ejemplo:
+
+            rar a -ma -htb listas.rar *.lst
+
+            añadirá *.lst a listas.rar usando BLAKE2sp para las sumas de
+            control.
+
+
+    -id[c,d,p,q]
+            Desactivar mensajes.
+
+            El modificador -idc desactiva la cadena copyright.
+
+            El modificador -idd desactiva la cadena "Hecho" al final de la
+            operación.
+
+            El modificador -idp desactiva el indicador de porcentaje.
+
+            El modificador -idq activa el modo silencioso, sólo se muestran los
+            mensajes de error y las preguntas.
+
+            Esto permite usar varios modificadores a la vez, de está manera el
+            modificador -idcdp es correcto.
+
+
+    -ieml[.][addr]
+            Enviar archivo por correo electrónico. Sólo para versiones Windows.
+
+            Adjuntar un archivo creado o actualizado para añadir al mensaje
+            del correo. Necesitará tener un cliente MAPI para usar este
+            modificador (los programas de e-mail más modernos soportan la
+            interfaz MAPI).
+
+            Debe introducir la dirección de destino del correo o dejarla en
+            blanco. En este último caso se la pedirá el programa de correo. Es
+            posible especificar varias direcciones separándolas con comas, o
+            puntos y comas. Si añade a -ieml un punto, el archivo se eliminará
+            después de que se adjunte al correo electrónico.
+            Si se usa el modificador para crear un archivo multi-volumen,
+            cada volumen se adjuntará separadamente al mensaje del correo.
+
+
+    -ierr   Enviar todos los mensajes a la consola de depuración.
+
+
+    -ilog[nombre]
+            Registrar los errores en un fichero (sólo versión registrada).
+
+            Escribe mensajes de error en el fichero rar.log. Si el nombre
+            especificado no incluye la ruta, el fichero log se creará usando los
+            siguientes valores predefinidos:
+
+            Unix:    fichero .rarlog en el directorio raíz del usuario;
+            Windows: fichero rar.log en el directorio %APPDATA%\WinRAR.
+
+            Si el modificador 'nombre' incluye un nombre de fichero sin su
+            trayectoria, RAR creará el fichero de registro en la carpeta
+            predeterminada mencionada anteriormente usando el nombre
+            especificado. Incluya tanto la trayectoria como el nombre en el
+            modificador 'nombre' si desea cambiar la ubicación del fichero de
+            registro.
+
+            Por defecto, el fichero de registro usa la codificación UTF-16
+            little endian, pero puede cambiarse con el modificador
+            -sc<juego>g, de forma que -scag lo cambia por la codificación
+            nativa de un solo byte.
+
+
+            Ejemplo:
+
+            rar a -ilogc:\log\backup.log backup d:\docs
+
+            creará el fichero de registro en c:\log\backup.log si hay errores.
+
+
+    -inul   Desactivar todos los mensajes.
+
+
+    -ioff   Apagar el PC después de finalizar la operación. El hardware
+            debe soportar la característica de apagado de energía. Sólo
+            para versiones Windows.
+
+
+    -isnd   Activar sonido.
+
+    -iver   Mostrar el número de versión y salir. Se puede ejecutar tan solo
+            como "RAR -iver".
+
+    -k      Bloquear el archivo. Cualquier orden que intente cambiar el
+            archivo será ignorada.
+
+
+    -kb     Guardar los ficheros extraídos dañados.
+
+            Por defecto RAR elimina los ficheros con errores en la suma de
+            control después de la extracción. El modificador -kb especifica que
+            los ficheros con errores en la suma de control no se eliminen.
+
+
+    -log[fmt][=nombre]
+            Escribe nombres en el fichero de registro.
+
+            Este modificador permite escribir los nombres de archivo y ficheros
+            al fichero de registro especificado en las operaciones de comprimir,
+            extraer, eliminar y listar.  Su comportamiento esta definido por la
+            cadena 'fmt' que puede incluir uno o mas de los siguientes
+            caracteres:
+
+            A - escribe nombres de archivo en el fichero de registro. Si RAR
+                crea o procesa volúmenes, todos los nombres de volumen se
+                registran.
+
+            F - escribe los nombres de los ficheros procesados en el fichero de
+                registro. Incluye los ficheros añadidos y extraídos del archivo
+                y los ficheros listados o eliminados del archivo.
+
+            P - si ya existe un fichero de registro con el nombre especificado,
+                añade los datos al fichero existente en vez de crearlo de nuevo.
+
+            U - escribir datos en formato Unicode.
+
+            Si no se especifica 'A' ni 'F', se asume 'A'.
+
+            El modificador 'nombre' permite especificar el nombre del fichero de
+            registro. Debe estar separado de la cadena 'fmt' por el carácter '='
+            Si no se especifica 'nombre' RAR usará el nombre de fichero
+            predeterminado rarinfo.log.
+
+            Se permite especificar varios modificadores -log en la misma línea
+            de órdenes.
+
+            Este modificador es especialmente útil cuando se necesita procesar
+            un archivo creado con los modificadores -ag o -v en un archivo de
+            proceso por lotes. Puede usar -loga=nombrearc.txt al crear el
+            archivo y luego leer el nombre del archivo generado por RAR de
+            nombrearc.txt con la orden adecuada. Por ejemplo, en archivos de
+            procesos por lotes en Windows puede usar:
+            set /p nombre=<nombrearc.txt.
+
+            Ejemplos:
+
+            1) escribir nombres de los volúmenes creados a listavol.txt:
+
+               rar a -v100m -loga=listavol.txt volumen.rar c:\data
+
+            2) escribir el nombre de archivo generado en Unicode en backup.txt:
+
+               rar a -ag -logau=backup.txt backup.rar misficheros\*
+
+            3) escribir los nombres de los volúmenes verificados en listavol.txt
+               y los nombres de los ficheros verificados en listaficheros.txt
+
+               rar t -log=listavol.txt -logf=listaficheros.txt volume.part01.rar
+
+
+    -m<n>   Establecer el tipo de compresión:
+
+       -m0   almacenar        Modo que no comprime ficheros al añadir al archivo
+       -m1   la más rápida    Modo de mínima compresión
+       -m2   rápida           Modo de compresión rápida
+       -m3   normal           Modo de compresión predefinida
+       -m4   buena            Modo de compresión buena (más compresión, pero más
+                              lento)
+       -m5   la mejor         Modo de máxima compresión (máxima compresión, pero
+                              mayor lentitud)
+
+            Si este modificador no se específica, RAR usará el método -m3
+            (compresión normal).
+
+
+    -ma[4|5]
+            Establecer la versión del formato de archivo.
+
+            Por defecto RAR crea los archivos en formato RAR 4.x. Use -ma5 o
+            solo -ma para crear archivos RAR 5.0. Use -ma4 si necesita cambiar
+            el modificador -ma5 guardado en la configuración predeterminada y
+            forzar RAR a usar el formato RAR 4.x.
+
+            Este modificador solo se usa al crear un archivo nuevo y se ignora
+            al actualizar un archivo existente.
+
+
+    -mc<par>
+            Establecer los modificadors avanzados de compresión.
+
+            Este modificador se proporciona principalmente para comparativas
+            y experimentos. En entornos reales es preferible dejar que RAR
+            seleccione los modificadors óptimos automáticamente.
+            Tenga en cuenta que un uso inapropiado de este modificador puede
+            llevar a pérdidas de rendimiento y de compresión muy importantes,
+            úsela sólo si sabe perfectamente lo que hace.
+
+            Tiene la siguiente sintaxis:
+
+            -mc[param1][:param2][módulo][+ o -]
+
+            donde <módulo> es el único carácter del campo que indica una
+            parte del algoritmo de compresión, el cual tiene que estar
+            configurado.
+
+            Puede tener los siguientes valores:
+
+              A       - compresión de sonido;
+              C       - compresión de datos de color verdadero (RGB);
+              D       - compresión delta;
+              E       - compresión para ejecutables Intel de 32-bit x86;
+              I       - compresión para ejecutables Intel Itanium de 64-bit;
+              T       - compresión de texto.
+
+            El formato de archivo RAR 5.0 solo soporta los valores 'D' y 'E'.
+
+            el signo '+' al final del modificador aplica el algoritmo
+            seleccionado a todos los datos procesados, '-' desactiva el módulo
+            del todo. Si no se específica ningún signo, RAR elegirá los módulos
+            de forma automática, basándose en los datos y el método de
+            compresión actual.
+
+            el modificador -mc- desactiva todos los módulos opcionales y permite
+            sólo el algoritmo general de compresión.
+
+            <Param1> y <Param2> son modificadors específicos del modo de
+            compresión que se describen a continuación.
+
+            Compresión de sonido,  compresión delta:
+
+            <Param1> es un número de canales de 1 byte (puede ser 1 - 31).
+            RAR divide los canales multibytes en bytes, por ejemplo, dos
+            canales de sonido de 16-bits los considera RAR como cuatro
+            canales de un byte cada uno.
+
+            <Param2> se ignora.
+
+
+            Compresión de ejecutables Intel de 32-bit x86,
+            compresión de ejecutables Intel Itanium de 64-bit,
+            compresión de datos de color verdadero (RGB):
+
+            <Param1> y <Param2> se ignoran.
+
+
+            Compresión de texto:
+
+            El algoritmo de compresión de texto proporciona un ratio de
+            compresión notablemente mayor en datos de texto plano pero no puede
+            usar varios núcleos del procesador eficientemente resultado en un
+            tiempo de compresión mayor comparado con el algoritmo general en
+            entornos multi-procesador o en procesadores con varios núcleos. Su
+            velocidad de descompresión es también más lenta que la del algoritmo
+            general independientemente del número de núcleos del sistema. Este
+            es el motivo por el cual esta opción esta desactivada de forma
+            predeterminada. Puede especificar el modificador -mct para permitir
+            que WinRAR use este algoritmo automáticamente cuando encuentre datos
+            apropiados. El modificador -mct+ forzará el uso de este algoritmo
+            para todos los datos
+
+            El modificador -mct puede incluir también <Param1> y <Param2>,
+            siendo su sintaxis completa -mc[param1][:param2]t[+ o -].
+
+            <Param1> es el orden del algoritmo PPM (puede ser 2 - 63).
+            Habitualmente un valor superior aumenta ligeramente la tasa
+            de compresión de datos redundantes, pero sólo si hay memoria
+            suficiente disponible para PPM. En caso de falta de memoria
+            el resultado puede ser negativo. Valores superiores producen
+            velocidades de compresión y descompresión menores.
+
+            <Param2> es la memoria en megabytes asignada para PPM (1-128).
+            Valores superiores pueden incrementar la tasa de compresión,
+            pero advierta que PPM utiliza un tamaño igual de memoria para
+            comprimir y descomprimir, así que si asigna demasiada memoria
+            al crear un archivo, otras personas pueden tener problemas al
+            descomprimir en un PC con menos memoria instalada.
+            La descompresión todavía es posible usando memoria virtual,
+            pero ésta puede ser muy lenta.
+
+
+            Ejemplos:
+
+            1) modificador -mc1a+ fuerza el uso de compresión mono audio de 8
+            bits para todos los datos.
+
+            2) modificador -mc10:40t+ fuerza el uso del algoritmo de compresión
+            de texto para todos los datos, establece la exigencia de compresión
+            a 10 y asigna 40 MB de memoria.
+
+            3) modificador -mc12t establece la exigencia de compresión de texto
+            a 12, cuando se usa la compresión de texto, pero deja que RAR decida
+            cuando debe usarla.
+
+            4) modificadores -mct -mcd- activa la compresión de texto y
+            desactiva la compresión delta.
+
+
+    -md<n>[k,m,g]
+            Tamaño del diccionario.
+
+            El diccionario móvil es un área de memoria que usa el algoritmo de
+            compresión para encontrar y comprimir patrones de datos que se
+            repiten. Si el tamaño del fichero que se está comprimiendo (o e
+            tamaño total de los ficheros en el caso de un archivo sólido)
+            es mayor que el tamaño del diccionario, entonces aumentando el
+            tamaño del diccionario, generalmente aumentará la tasa de
+            compresión, pero disminuirá la velocidad de compresión y se
+            necesitará más memoria.
+
+            Para el formato RAR 4.x el tamaño del diccionario puede ser: 64 KB,
+            128 KB, 256 KB, 512 KB, 1MB, 2 MB, 4 MB.
+
+            Para el formato RAR 5.0 el tamaño del diccionario puede ser: 128 KB,
+            256 KB, 512 KB, 1MB, 2 MB, 4 MB, 8 MB, 16 MB, 32 MB, 64 MB, 128 MB,
+            256 MB, 512 MB, 1 GB.
+
+            Puede usar los modificadores 'k', 'm' y 'g' para especificar el
+            tamaño en kilo, mega y gigabytes, como por ejemplo -md64m para un
+            diccionario de 64 MB. Si no se especifica el modificador, se asume
+            megabytes, así que -md64m y -md64 son equivalentes.
+
+            Al comprimir, RAR necesita cerca de seis veces mas memoria que el
+            tamaño del diccionario, así que los tamaños 512 MB y 1GB solo
+            están disponibles en la versión de RAR para 64 bits. Al descomprimir
+            solo se requiere un poco mas que el tamaño del diccionario, así que
+            tanto la versión de 32 como la de 64 bits pueden descomprimir
+            archivos con cualquier tamaño diccionario incluyendo el de 1 GB.
+
+            RAR puede reducir el tamaño del diccionario si es significativamente
+            mayor que el tamaño de los datos de origen. Esto ayudará a reducir
+            los requerimientos de memoria sin disminuir la compresión.
+
+            Por defecto el tamaño del diccionario es de 4 MB para RAR 4.x y de
+            32 MB para el formato de archivo RAR 5.0.
+
+            Ejemplo:
+
+            RAR a -s -ma -md128 sources *.asm
+
+            Creará un archivo sólido en formato RAR 5.0 usando un diccionario de
+            128 MB.
+
+
+    -ms[lista]
+            Especificar los tipos de ficheros a almacenar
+
+            Especifica los tipos de ficheros que se almacenarán sin compresión.
+            Este modificador puede usarse para almacenar carpetas ya
+            comprimidas, lo que ayudará a aumentar la velocidad de compresión
+            sin una pérdida notable de la tasa de compresión.
+
+            El modificador opcional <lista> define la lista de extensiones de
+            ficheros separados por puntos y comas. Por ejemplo, -msrar;zip;jpg
+            forzará a RAR a almacenar sin compresión todos los archivos RAR y
+            ZIP e imágenes JPG. Se pueden especificar también máscaras con
+            comodines en la lista, así -ms*.rar;*.zip;*.jpg también funcionará.
+            Se permiten varios modificadores -ms, como por ejemplo -msrar -mszip
+            en vez de .msrar;zip.
+
+            En Unix el modificador -ms que contenga varios tipos de ficheros
+            necesita estar entre comillas para evitar que el punto y coma sea
+            procesado por el shell de Unix. Otra solución es usar modificadores
+            -ms<tipo> individuales para cada tipo de fichero.
+
+            Si no se especifica <lista>, el modificador -ms usará el conjunto
+            predefinido de extensiones, que incluye los siguientes tipos de
+            ficheros:
+
+            7z, ace, arj, bz2, cab, gz, jpeg, jpg, lha, lzh, mp3,
+            rar, taz, tgz, xz, z, zip
+
+
+    -mt<procesos>
+           Fijar el número de procesos.
+
+            El modificador <procesos> puede tomar valores entre 1 y 32. Este
+            modificador define el número máximo de hilos activos recomendado
+            para el algoritmo de compresión, así como para los otros módulos de
+            WinRAR que puedan usar varios hilos. Aunque WinRAR intenta seguir
+            esta recomendación el número real de hilos puede superar el valor
+            especificado.
+
+            El cambio del modificador <procesos> afecta ligeramente a la tasa
+            de compresión, por lo que archivos creados con diferentes
+            modificadores -mt no serán exactamente iguales aunque los otros
+            ajustes de compresión sean iguales.
+
+            Si no se especifica el modificador -mt, RAR intentará detectar
+            el número de procesadores disponibles y seleccionará el número
+            óptimo de hilos automáticamente.
+
+
+    -n<f>   Filtro adicional de ficheros a incluir.
+
+            Aplica la máscara como filtro adicional a la lista de ficheros a
+            incluir. Pueden usarse comodines tanto en el nombre como en la
+            trayectoria del fichero. Vea la descripción del modificador -x para
+            mas detalles sobre la sintaxis que puede usar en la máscara. Puede
+            especificar varias veces el modificador '-n'.
+
+            Este modificador no sustituye a las máscaras habituales de fichero,
+            por lo que necesitará introducirla en la línea de órdenes.
+            Es un filtro adicional que limita los ficheros procesados a los
+            que coinciden con la máscara incluida en el modificador -n.
+            Esto puede reducir a veces la longitud de la línea de órdenes.
+
+            Por ejemplo, si necesita comprimir todos ficheros *.txt y *.lst
+            en los directorios Project e Info, deberá introducir:
+
+            rar a -r text Project\*.txt Project\*.lst Info\*.txt Info\*.lst
+
+            o usar el modificador -n:
+
+            rar a -r -n*.txt -n*.lst text Project Info
+
+
+    -n@<lf> Leer máscaras de filtros adicionales desde fichero.
+
+            Es similar al modificador -n<f>, pero lee las máscaras incluidas
+            en la lista de ficheros. Si usa -n@ sin el nombre de la lista de
+            ficheros, leerá las máscaras de filtro desde la entrada estándar
+            (stdin).
+
+				Este modificador no substituye la lista de ficheros o las máscaras
+				de ficheros, que todavía es necesario especificar en la línea de
+				órdenes. Es un filtro adicional que limita los ficheros procesados
+				solo a los que concuerdan con la máscara de ficheros especificada
+				con el modificador -n.
+
+            Ejemplo:
+
+            rar a -r -n@inclist.txt text Project Info @listfile.txt
+
+
+    -oc     Establecer el atributo NTFS 'comprimido'. Solo para Windows.
+
+            Este modificador permite restaurar el atributo NTFS 'comprimido' al
+            extraer los ficheros. RAR almacena este atributo al crear el
+            archivo pero no lo restaura a menos que especifique el modificador
+            -oc.
+
+
+    -oh     Guardar enlaces fuertes como enlace en lugar de como fichero.
+
+            Si los ficheros a comprimir incluyen varios enlaces fuertes se
+            almacena el primer enlace fuerte como un fichero normal y el resto
+            de enlaces fuertes en el mismo conjunto como enlaces a este primer
+            fichero. Al extraer estos ficheros, RAR creará enlaces fuertes en
+            vez de ficheros normales.
+
+            No debe eliminar o renombrar el primer enlace fuerte del archivo
+            una vez ha creado el archivo porque haría imposible la extracción de
+            los siguientes enlaces. Si modifica este primer enlace todos los
+            enlaces siguientes también tendrán el contenido modificado cuando
+            se descompriman. El proceso de extracción requiere el primer enlace
+            fuerte para poder crear los siguientes enlaces correctamente.
+
+            Este modificador solo está soportado en el formato RAR 5.0, así que
+            necesitará también usar el modificador -ma con él.
+
+
+    -oi[0-4][:<tmínimo>]
+            Guardar ficheros idénticos como referencias.
+
+            EL modificador -oi0 (o simplemente -oi-) desactiva el proceso de
+            ficheros idénticos, de forma que estos ficheros se comprimen de la
+            forma habitual. Puede usarse para modificar otro valor -oi
+            almacenado en la configuración RAR.
+
+            Si se especifica -oi1 (o simplemente -oi), RAR analiza el contenido
+            de los ficheros antes de iniciar la compresión. Si se encuentran
+            varios ficheros idénticos, el primer fichero se almacena como un
+            fichero normal y el resto de ficheros se almacenan como referencias
+            al primero. Esto permite reducir el tamaño del archivo pero requiere
+            algunas restricciones sobre el archivo resultante. No debe eliminar
+            o renombrar el primer fichero idéntico en el archivo una vez el
+            archivo ha sido creado porque esto haría imposible la extracción de
+            los siguiente archivos que lo usan como referencia. Si modifica el
+            primer fichero los ficheros siguientes también verán su contenido
+            modificado una vez extraídos. El proceso de extracción requiere el
+            primer fichero para poder crear los siguientes correctamente.
+
+            Se recomienda usar -oi solo si está comprimiendo muchos ficheros
+            idénticos en un archivo que no va a modificar posteriormente y que
+            va a extraer en su totalidad ni necesitar extraer descomprimir o
+            omitir ficheros individuales. Si todos los ficheros idénticos son
+            lo suficientemente pequeños para caber en el diccionario de
+            compresión especificado con el modificador -md<n> , el modificador
+            -s puede proporcionar una solución mas flexible que -oi.
+
+            El modificador -oi2 es similar a -oi1 con la diferencia que muestra
+            los nombres de los ficheros idénticos antes de iniciar la
+            compresión.
+
+            Los modificadores -oi3 y -oi4 permiten usar RAR para generar listas
+            de ficheros idénticos. Necesitará proporcionar un nombre de archivo
+            para que la sintaxis de  la orden sea válida, en este modo el
+            archivo no es creado y nada se comprime. Si usa -oi3 se muestran
+            los tamaños y nombres de los ficheros y cada grupo de ficheros
+            idénticos se separa con una línea vacía. El modificador -oi4 solo
+            muestra los nombres de fichero, omitiendo el primer fichero idéntico
+            de cada grupo de forma que solo se muestran los ficheros duplicados.
+
+            El valor opcional <tmínimo> permite definir el tamaño mínimo de los
+            ficheros. Los ficheros cuyo tamaño sea inferior a <tmínimo> no son
+            analizados y no se consideran idénticos. Si este modificador no esta
+            presente, se asume como valor predeterminado 64 KB. Al seleccionar
+            un valor pequeño para <tmínimo> se puede incrementar el tiempo
+            requerido para detectar ficheros idénticos.
+
+            Los modificador -oi1 y -oi2 solo están soportados en el formato
+            RAR 5.0, así que necesitará también usar el modificador -ma con
+            ellos.
+
+            Ejemplos:
+
+            1) rar a -oi -ma archivo
+
+            Comprimir el contenido de la carpeta actual en el archivo
+            archivo.rar y guardar los ficheros idénticos como referencias.
+
+            2) rar a -oi3:1000000 -r dummy c:\foto\*.jpg
+
+            Listar todos los ficheros *.jpg duplicados mayores de 1000000 bytes
+            encontrados en la carpeta c:\foto y sus subcarpetas.
+
+
+    - ol[a] Procesar enlaces simbólicos como enlaces [rutas absolutas]
+
+            Guarda los enlaces simbólicos como enlaces de forma que el contenido
+            del fichero no se almacena. En la versión para Windows también
+            guarda los puntos de reanálisis como enlaces. Estas entradas de
+            archivo se restauran como enlaces simbólicos o puntos de reanálisis
+            al descomprimirse.
+
+            Esta soportado en los archivos RAR 4.x y RAR 5.x en Unix y solo en
+            archivos RAR 5.0 en RAR para Windows.
+
+            En Windows podría necesitar ejecutar RAR como administrador para
+            crear enlaces simbólicos al extraer.
+
+            RAR añade todos los enlaces independientemente de su destino al
+            comprimir con el modificador -ol. Al extraer, por defecto, RAR omite
+            los enlace simbólicos que apuntan fuera de la carpeta de destino,
+            tanto los que usan rutas absolutas como si usan un número excesivo
+            de ".." en su destino. Puede activar la extracción de este tipo de
+            enlaces con el modificador -ola.
+            
+            Los enlaces que apuntan a carpetas fuera de la carpeta de destino de
+            la extracción pueden presentar problemas de seguridad. Active su
+            extracción solo si está seguro de que el contenido del archivo es
+            seguro, como por ejemplo si es una copia de seguridad propia.
+            
+            Los enlaces con rutas relativas dentro de la carpeta de destino se
+            extraen siempre independientemente del modificador -ol o -ola.
+
+    -oni    Permitir nombres potencialmente incompatibles.
+
+            Aunque el sistema de ficheros NTFS permite nombres de fichero con
+            espacios y puntos al final del nombre, muchas aplicaciones para
+            Windows no pueden procesar estos nombres correctamente. Si no se
+            especifica este modificador, RAR eliminará estos puntos y espacios
+            si los hubiese de los nombres de ficheros al extraer. Especifique
+            este modificador si necesita extraer estos nombres tal como son.
+
+            Solo para la versión Windows.
+
+
+    -or     Renombrar ficheros automáticamente, si ya existe un fichero con el
+            mismo nombre. El fichero renombrado adquiere un nombre similar a
+            'filename(N).txt', donde 'filename.txt' es el nombre de fichero
+            original y 'N' es un número a partir de 1 e incrementado si ya
+            existe el fichero.
+
+
+    -os     Guardar flujos NTFS. Sólo para versiones Windows.
+
+            Este modificador sólo tiene razón de ser en sistemas de ficheros
+            NTFS, y permite guardar flujos de datos alternativos, asociados con
+            un fichero. Puede necesitar usar este modificador al comprimir si
+            usa algún programa que guarde datos en flujos alternativos y desee
+            preservar estos flujos de datos.
+
+            Los flujos de datos no se guardan para ficheros NTFS cifrados.
+
+
+    -ow     Usar este modificador para guardar la información de seguridad al
+            comprimir un fichero y cuando se extraiga para su restauración.
+
+            La versión RAR de Unix guarda o restablece el propietario y grupo
+            del fichero, al usar este modificador.
+
+            La versión de Windows almacena el propietario, grupo, permisos del
+            fichero y la información de auditoría, pero sólo si dispone de los
+            privilegios necesarios para leerlos. Advierta que sólo los sistemas
+            de ficheros NTFS soportan los ficheros basados en la seguridad bajo
+            Windows.
+
+    -o[+|-] Establece el modo de sobreescritura. Puede usarse tanto al extraer
+            como al actualizar ficheros comprimidos. Los siguientes modos están
+            soportados:
+
+            -o      Preguntar antes de sobrescribir
+                    (modo por defecto al extraer ficheros);
+
+            -o+     sobrescribir ficheros existentes.
+                    (modo por defecto al actualizar ficheros comprimidos)
+
+            -o-     No sobrescribir ficheros existentes.
+
+
+    -p[cña]   Usar la contraseña <p> para cifrar al comprimir o para descifrar
+            al descomprimir.
+            
+            La contraseña es sensible a mayúsculas y minúsculas. La longitud
+            máxima de la contraseña son 127 carácteres. Las contraseñas mas
+            largas se truncan a esta longitud. Si omite la contraseña en la
+            línea de órdenes, aparecerá el mensaje "Introduzca la contraseña".
+            También puede usar redirecciones de fichero o flujos de entrada
+            para especificar la contraseña si falta el parámetro <cña>.
+
+            Ejemplos:
+
+            1) rar a -pmyhoney secret1 *.txt
+
+            añade ficheros *.txt y los codifica con la contraseña "myhoney".
+
+            2) rar -p texts.rar *.txt < psw.txt
+
+            usa el contenido del fichero psw.txt como contraseña.
+
+
+    -p-     No pedir contraseña
+
+            No pedir la contraseña para ficheros cifrados al extraer.
+            Actualmente puede especificar cualquier contraseña inválida para
+            evitar que RAR le pida la contraseña y forzar a que RAR emita el
+            mensaje 'Contraseña incorrecta' al extraer un fichero cifrado. Este
+            modificador establece '-' como contraseña.
+
+
+    -qo[-|+]
+            Añadir información de acceso rápido [ninguna|forzar]
+
+            Los archivos RAR almacenan una cabecera para cada fichero que
+            contiene información como el nombre del fichero, la fecha, su
+            tamaño y sus atributos inmediatamente antes de los datos del
+            fichero descrito. Esta técnica es más resistente a daños que
+            almacenar todas las cabeceras de ficheros en un solo bloque
+            continúo, que si es dañado o truncado destruye el contenido entero
+            del archivo. Pero aunque son mas confiables, estas cabeceras de
+            fichero esparcidas por todo el archivo son más lentas de acceder
+            si necesita tener abrir rápidamente el contenido del archivo en
+            un entorno como la interfase gráfica de WinRAR.
+
+            Para mejorar la velocidad al abrir archivos y evitar que el archivo
+            entero sea vulnerable a un solo bloque dañado, los archivos RAR 5.0
+            pueden incluir un registro opcional de acceso rápido. Este registro
+            se añade al final del archivo y contiene copia de los nombres de
+            ficheros y otra información almacenada en un solo bloque continuo
+            adicional a las otras cabeceras dentro del archivo. Al ser este
+            bloque continuo su contenido puede leerse rápidamente sin la
+            necesidad de efectuar una gran cantidad de operaciones de búsqueda
+            en el disco. Si RAR detecta que esta información de acceso rápido
+            esta dañada podrá acceder a leer las cabeceras individuales dentro
+            del archivo de forma que la resistencia contra daños no se merma.
+
+            El registro de acceso rápido contiene una copia exacta de la
+            cabecera de cada fichero, que puede llegar a ser de varias decenas
+            o centenares de bytes por fichero, lo que incrementa el tamaño del
+            archivo en la misma medida. Este aumento de tamaño se nota más
+            cuando hay muchos ficheros pequeños cuyo tamaño es comparable al
+            tamaño de la cabecera. Así que por defecto, si no se especifica
+            este modificador o se especifica -qo sin modificadors RAR almacena
+            copias de las cabeceras solo para ficheros relativamente largos y
+            continua usando cabeceras locales para ficheros pequeños. El tamaño
+            límite puede depender de la versión de RAR. Esta técnica proporciona
+            un balance razonable entre la velocidad de acceso y el tamaño del
+            archivo. Si prefiere obtener la máxima velocidad de acceso y no
+            le importa el tamaño del archivo puede usar el modificador -qo+ para
+            almacenar copia de todas las cabeceras de fichero. Si necesita tener
+            el menor tamaño de archivo posible y no le importa la velocidad de
+            acceso puede especificar -qo- para excluir la información de acceso
+            rápido completamente.
+
+            Si quiere medir el efecto de este modificador en la velocidad
+            asegúrese que el contenido del archivo no se almacene en la caché
+            de disco. Si el archivo esta en la caché no se realizan búsquedas
+            en disco reales, haciendo que el acceso a las cabeceras de fichero
+            sean rápidas incluso sin el registro de acceso rápido.
+
+
+    -r      Recorrer carpetas recursivamente. Puede usarse con las órdenes:
+            a, u, f, m, x, e, t, p, v, l, c, cf, s.
+
+            Cuando se usa con las ordenes 'a', 'u', 'f', 'm' se procesan los
+            ficheros en todos los subdirectorios, así como en el directorio
+            actual de trabajo.
+
+            Cuando se usa con las ordenes x, e, t, p, v, l, c, cf, s se
+            procesan los archivos en todos los subdirectorios, así como en
+            el directorio actual de trabajo.
+
+
+    -r-     Desactivar recursión.
+
+            Incluso sin usar el modificador -r RAR puede activar la recursión
+            automáticamente en algunas situaciones. El modificador -r- prohíbe
+            totalmente la recursión.
+
+            Si especifica un nombre de carpeta al comprimir que no incluya
+            comodines, por defecto RAR añade la carpeta recursivamente aunque no
+            se haya especificado el modificador -r. Sucede lo mismo si se
+            especifica la carpeta raíz de cualquier disco sin comodines. El
+            modificador -r- desactiva este comportamiento.
+
+            Por ejemplo:
+
+            rar a -r- arc carpeta
+
+            esta orden solo añadirá la carpeta 'carpeta' vacía, ignorando todo
+            su contenido. La siguiente orden:
+
+            rar a -r- arc c:\
+
+            comprimirá solo el contenido de la carpeta raíz c: sin incluir sus
+            subcarpetas.
+
+
+    -r0     Es similar a -r, pero cuando se usa con las ordenes 'a', 'u', 'f',
+            'm' recorre recursivamente la estructura de los subdirectorios sólo
+            para aquellas máscaras de fichero que incluyen caracteres comodín
+            '*' o '?'.
+
+            Este modificador solo funciona para nombres de fichero. Los nombres
+            de directorios que no incluyen la parte del fichero, como por
+            ejemplo 'carpeta', no se ven afectados por -r0 y su contenido se
+            añade completamente al archivo al menos que se especifique el
+            modificador -r-.
+
+            Ejemplo:
+
+            rar a -r0 docs.rar *.doc leame.txt
+
+            Añade los ficheros *.doc del directorio actual y sus subdirectorios
+            y el fichero leame.txt solo del directorio actual al archivo
+            docs.rar. Si hubiese usado el modificador -r, RAR también buscaría
+            los ficheros leame.txt en los subdirectorios.
+
+
+    -ri<p>[:<s>]
+            Establecer la prioridad y el tiempo de inactividad. Sólo disponible
+            en RAR para Windows.
+
+            Este modificador regula la carga del sistema por RAR en un entorno
+            de ejecución de tareas múltiples. Valores posibles de la prioridad
+            <p> son 0 - 15.
+
+            Si <p> es 0, RAR usa la prioridad predefinida de tarea.
+            Si <p> es igual a 1 establece la prioridad más baja posible, 15 - es
+            la más alta posible.
+
+            El tiempo de inactividad <s> es un valor que va de 0 a 1000
+            (milísegundos). Este es un período de tiempo que RAR cede al sistema
+            después de las operación de lectura o escritura, al comprimir o al
+            extraer. Si es distinto de cero <s>, puede ser útil para ayudarle a
+            reducir la carga del sistema, incluso de forma mejor, que el que se
+            logra con el modificador <p>.
+
+            Ejemplo:
+
+            ejecuta RAR con la prioridad predefinida y 10 ms de tiempo de
+            inactividad:
+
+            rar a -ri0:10 backup *.*
+
+
+    -rr[N]  Añadir un registro de recuperación de datos. Este modificador se usa
+            al crear o modificar un archivo para añadir un registro de
+            recuperación de datos al archivo. Vea la descripción de
+            'rr[N]' para más detalles.
+
+
+    -rv[N]  Crear volúmenes de recuperación. Este modificador se usa al crear un
+            archivo multi-volumen para generar volúmenes de recuperación.
+            Vea la descripción de la orden 'rv[N]' para más detalles.
+
+
+    -s      Crear un archivo sólido. Sólido es un tipo de archivo especial. Un
+            archivo sólido es un archivo comprimido usando un método especial de
+            compresión que trata todos o algunos ficheros dentro del archivo
+            como un flujo continuo de datos.
+
+            La compresión sólida aumenta significativamente la compresión cuando
+            se comprime un gran número de ficheros similares, pero también tiene
+            algunos inconvenientes: tarda más en actualizar archivos sólidos ya
+            existentes y en acceder a ficheros individuales y tiene menor
+            resistencia a daños.
+
+            Normalmente los ficheros en un archivo sólido se ordenan por
+            extensión pero también es posible desactivar este orden con el
+            modificador -ds o establecer un orden alternativo usando el fichero
+            especial rarfiles.lst
+
+            Ejemplo:
+
+            crea el archivo sólido sources.rar con un diccionario de 512 KB,
+            recorrido recursivo de todos los directorios, iniciando con el
+            directorio actual y añade sólo ficheros .asm:
+
+            rar a -s -md512 sources.rar *.asm -r
+
+
+    -s<N>   Crear grupos sólidos usando contador de ficheros
+
+            Es similar a -s, pero reajusta las estadísticas sólidas después de
+            la compresión de <N> ficheros. Habitualmente disminuye la
+            compresión, pero también disminuye las perdidas en caso de daños en
+            el archivo sólido.
+
+
+    -sc<juego>[objetos]
+
+            Especificar el juego de caracteres.
+
+            El modificador 'juego' es obligatorio y puede tener uno de los
+            siguientes valores:
+
+              U - Unicode UTF-16;
+              A - Codificación nativa de un solo byte, que es ANSI para la
+                  versión de Windows;
+              O - Codificación OEM (DOS). Sólo para la versión de Windows.
+
+            El orden de importancia en los ficheros de origen UTF-16, como
+            listas de ficheros o comentarios, se detecta en base al byte de
+            marca de orden. Si el byte de marca de orden no está presente, se
+            asume una codificación little endian.
+
+            El modificador 'Objetos' es opcional y puede tener uno de los
+            siguientes valores:
+
+              G - fichero de registro producido por el modificador -ilog
+              L - lista de ficheros;
+              C - ficheros de comentario.
+              R - mensajes enviados a ficheros y canales (solo Windows)
+
+            Esto permite especificar más de un objeto, por ejemplo,
+            -scolc. Si el modificador 'objetos' está ausente, 'charset' se
+            aplicará a todos los objetos.
+
+            Este modificador permite especificar el carácter establecido a los
+            ficheros con el modificador -z[fichero], listará ficheros y ficheros
+            de comentario, escritos por la orden "cw".
+
+            Ejemplos:
+
+            1) rar a -scol data @list
+
+            Lee los nombres contenidos en 'list' usando codificación OEM.
+
+            2) rar c -scuc -zcomment.txt data
+
+            Lee comment.txt como un fichero Unicode.
+
+            3) rar cw -scuc data comment.txt
+
+            Escribe comment.txt como fichero Unicode.
+            
+            4) rar lb -scur data > list.txt
+            
+            Guardar nombres de los ficheros archivados en data.rar a list.txt en
+            formato Unicode.
+
+
+    -se     Crear grupos sólidos por extensión de fichero
+
+            Similar a -s, pero reinicia las estadísticas sólidas cuando cambia
+            la extensión de fichero. Habitualmente disminuye la compresión, pero
+            también disminuye las perdidas en caso de daños en el archivo
+            sólido.
+
+
+    -sfx[nombre]
+            Crear archivos SFX. Este modificador se usa para crear un nuevo
+            archivo, un archivo auto-extraíble (usando un módulo con el fichero
+            default.sfx o bien, especificado en el modificador). En la versión
+            de Windows, el fichero default.sfx debe colocarse en el mismo
+            directorio que rar.exe, en Unix - en el directorio anfitrión del
+            usuario, en /usr/lib o /usr/local/lib.
+
+
+            Ejemplo:
+
+            rar a -sfxwincon.sfx myinst
+
+            crea un archivo auto-extraíble (SFX) usando el módulo wincon.sfx .
+
+
+    -si[name]
+            Leer datos de la entrada estándar (stdin - standard input),
+            al crear un archivo. El modificador opcional 'nombre' permite
+            especificar un nombre de fichero de datos comprimido de forma
+            estándar en el archivo creado. Si este modificador está ausente,
+            el nombre será establecido por 'stdin'.
+
+            Ejemplo:
+
+            type Tree.Far | rar a -siTree.Far tree.rar
+
+            comprimirá 'type Tree.Far' como fichero de salida 'Tree.Far'.
+
+
+    -sl<size>
+            Generar ficheros con tamaño menor que el especificado en el
+            modificador <tamaño> de este modificador. El modificador <tamaño>
+            debe especificarse en bytes.
+
+
+    -sm<size>
+            Generar ficheros con tamaño mayor que el especificado en el
+            modificador <tamaño> de este modificador. El modificador <tamaño>
+            debe especificarse en bytes.
+
+
+    -sv     Crear volúmenes sólidos independientes
+
+            RAR predefinidamente intenta reajustar las estadísticas
+            cuando inicia un volumen nuevo, pero sólo si hay bastantes
+            datos que estén empaquetados después de un reajuste previo
+            (de algunos megabytes).
+
+            Este modificador fuerza a RAR a ignorar el tamaño de los datos
+            empaquetados, y espera a reajustar las estadísticas para los
+            volúmenes de cualquier tamaño. Esto decrece la compresión,
+            aunque aumenta las probabilidades de extraer una parte de
+            los datos, si uno de los volúmenes sólidos está perdido o
+            dañado.
+
+            Advierta que RAR algunas veces no reajusta las estadísticas
+            aunque use este modificador. Por ejemplo, no podrá hacerlo al
+            comprimir un fichero grande dividido en varios volúmenes.
+            RAR sólo puede reajustar las estadísticas entre ficheros
+            separados, pero no en de un único fichero.
+
+            Se ignorará si se usa para crear un archivo de poco volumen.
+
+    -sv-    Crear volúmenes sólidos dependientes
+
+            Desactivar el reajuste de estadísticas entre volúmenes.
+
+            Aumenta ligeramente la compresión, aunque reduce las
+            probabilidades de extraer una parte de los datos, si
+            uno de los volúmenes sólidos está perdido o dañado.
+
+            Se ignorará si se usa para crear un archivo de poco volumen.
+
+
+    -s-     Desactivar la compresión sólida
+
+
+    -t      Comprobar ficheros después de comprimir. Este modificador es
+            especialmente útil en combinación con la orden de compresión,
+            de forma que los ficheros serán eliminados sólo si el archivo
+            ha sido comprobado con éxito.
+
+    -ta<fecha>
+            Generar ficheros modificados después de la fecha especificada.
+
+            El formato de fecha es AAAAMMDDHHMMSS
+            Se permite insertar separadores tales como '-' o ':' a la
+            cadena de fecha y omite los campos de arrastre. Por ejemplo,
+            el siguiente modificador es correcto: -ta2001-11-20.
+            Internamente se puede expandir como -ta20011120000000 y se
+            trataría como "ficheros modificados después de las 0 horas,
+            0 minutos, 0 segundos del día 20 noviembre del 2001".
+
+
+    -tb<fecha>
+            Procesar sólo ficheros modificados antes de la fecha especificada.
+            El formato del modificador es el mismo que -ta<date>.
+
+
+    -tk     Conservar la hora original del archivo. Impide que RAR modifique la
+            fecha al cambiar un archivo.
+
+
+    -tl     Establecer como hora de archivo la del último fichero. Fuerza a RAR
+            a establecer la fecha de un archivo cambiado, a la fecha del último
+            fichero del archivo.
+
+
+    -tn<time>
+            Generar ficheros posteriores a un período de tiempo especificado.
+            El formato de la cadena tiempo es:
+
+            [<ndías>d][<nhoras>h][<nminutos>m][<nsegundos>s]
+
+            Por ejemplo, use el modificador -tn15d para procesar los ficheros
+            más recientes que 15 días y -tn2h30m para procesar ficheros más
+            recientes que 2 horas 30 minutos.
+
+
+    -to<fecha>
+            Procesar ficheros anteriores al la fecha especificada. El formato de
+            Esta modificador es el mismo que para -tn<fecha>.
+
+
+    -ts<m,c,a>[N][+|-]
+            Guardar o restaurar fecha y hora (modificación, creación, acceso).
+
+            El modificador -tsm indica a que RAR guarde la fecha de modificación
+            del fichero, -tsc - la fecha de su creación y tsa - la fecha del
+            último acceso.
+
+            Para el formato RAR 4.x el modificador opcional después del
+            modificador es un número comprendido entre 0 y 4, que controlará la
+            precisión del tiempo del fichero. El valor '1' permite 1 segundo de
+            precisión, el valor 2 - 0.0065536 seg, 3 - 0.0000256 seg y 4 o '+'
+            permite la máxima precisión de tiempo en NTFS, que es igual a
+            0.0000001 seg. El valor '0' o '-' indica que la fecha de creación y
+            acceso no se guardará y que la precisión usada para la
+            modificación de fecha es baja (2 seg). Modos superiores de precisión
+            añaden más datos al archivo, hasta 19 bytes adicionales por fichero,
+            en caso de combinar -tsm4 -tsa4 -tsc4. Si no se especifica la
+            precisión, RAR usará el valor '4' (alto).
+
+            El formato de archivo RAR 5.0 almacena el tiempo con una precisión
+            de 1 segundo o bien con la máxima precisión NTFS para '2', '3' y '4'.
+            '0' omite la fecha en los archivos RAR 5.0 incluso si es la fecha de
+            modificación, de forma que los ficheros descomprimidos tendrán la
+            fecha actual del sistema al descomprimirse.
+
+            RAR predefinidamente usa -tsm4 -tsc0 -tsa0, de esta manera la fecha
+            de modificación se almacena con alta precisión y las otras fechas se
+            ignoran.
+
+            Es necesario especificar los modificadores -tsc y -tsa para
+            establecer la fecha de creación y acceso al desempacar los
+            ficheros (la precisión es irrelevante, pero no debe ser 0).
+            RAR predefinidamente establece sólo la fecha de modificación,
+            aún si el archivo contiene la fecha de creación y último acceso.
+            Ajustar la fecha de modificación a los ficheros desempaquetados
+            puede deshabilitarse con -tsm-.
+
+            Es posible omitir las letras de la fecha, si necesita aplicar
+            el modificador a las tres fechas. Por ejemplo, -tsm4 -tsa4 -tsc4
+            se puede sustituir por -ts4, -ts+ o -ts. Use -ts- para guardar sólo
+            la fecha de modificación con precisión en archivos RAR 4.x, para
+            no almacenar la fecha del fichero en archivos RAR 5.0 o para ignorar
+            las tres fechas del fichero al descomprimir.
+
+            Al crear un archivo, RAR automáticamente reduce la precisión,
+            sino soporta el sistema del fichero el modo alto.
+            No es más de 2 segundos en FAT y 1 segundo en Unix.
+            En NTFS la precisión de fecha es de 0.0000001 segundos.
+
+            Los sistemas operativos limitan el tiempo establecido para
+            desempaquetar. Windows permite establecer las tres fechas,
+            Unix - la modificación y el último acceso, pero no la creación.
+
+            Ejemplos:
+
+            1) rar a -ts backup
+
+            Almacena todas fechas del fichero con la máxima precisión posible.
+
+            2) rar x -tsa backup
+
+            Restaura la fecha de modificación y último acceso. El modificador
+            -tsm no se requiere, ya que RAR usa el predeterminado.
+
+            3) rar a -tsm1 -tsc1 backup
+
+            Almacena con baja precisión la fecha de modificación y creación.
+            Sin -tsm1, RAR guarda la fecha de modificación con alta precisión.
+
+
+    -u      Actualizar los ficheros. Puede usarse con el archivo de extracción
+            o creación.
+            La cadena de la orden "a -u" equivale a la orden 'u', podrá usar
+            también el modificador '-u' con las ordenes 'm' o 'mf'. Si se
+            usa el modificador e'-u' con las ordenes 'x' o 'e', entonces
+            los ficheros no presentes en el disco y las copias más nuevas
+            de los ficheros se extraerán en el disco desde el archivo.
+
+
+    -v      Crear volúmenes con detección automática de tamaño o listar todos
+            los volúmenes. Este modificador puede usarse para crear o listar
+            volúmenes.
+
+            En el primer caso permite la autodetección del tamaño de volumen,
+            así los volúmenes nuevos usarán todo el espacio disponible en los
+            medios de destino. Esto es conveniente al crear volúmenes en discos
+            extraíbles. Puede leer más sobre los volúmenes en la descripción
+            -v<tamaño>.
+
+            En el segundo caso, cuando se usa este modificador conjuntamente
+            con las ordenes 'V' o 'L', fuerza a que RAR liste los contenidos
+            de todos los volúmenes a partir del especificado en la línea de
+            ordenes.
+            Sin este modificador RAR muestra sólo los contenidos de un único
+            volumen especificado.
+
+
+    -v<tamaño>[k|b|f|m|M|g|G]
+            Crear volúmenes con tamaño=<tamaño>*1000 [*1024 | *1].
+            Predefinidamente este modificador usa <tamaño> en miles (1000) de
+            bytes (no 1024 x bytes), también puede introducir el tamaño en
+            kilobytes usando el símbolo 'k', en bytes - 'b', megabytes - 'm',
+            millones de bytes - 'M', gigabytes - 'g', billones de bytes - 'G'
+            o seleccionar uno de los múltiples valores predefinidos usando el
+            símbolo 'f' seguido del valor numérico.
+            Los valores predefinidos son 360, 720, 1200, 1440 ó 2880 y
+            sustituidos con el correspondiente del tamaño del disquete.
+
+            Si se omite el tamaño, se usará la autodetección.
+
+            Se permite especificar fracciones decimales usando el punto como
+            separador decimal. Por ejemplo, -v1.5g significa 1.5 gigabytes.
+
+            Puede especificar varios modificadores -v para establecer diferentes
+            tamaños para diferentes volúmenes. Por ejemplo:
+
+              rar a -v100k -v200k -v300k arcname
+
+            establece 100 KB de tamaño para el primer volumen, 200 KB para el
+            segundo y 300 KB para los demás volúmenes.
+
+            Si los volúmenes son creados en un medio extraíble, después de la
+            creación del primer volumen, al usuario se le preguntará si desea:
+
+            Crear el siguiente volumen: Si/No/Si a todo
+
+            En este preciso momento, deberá cambiar los discos. Contestando 'Si
+            a todo' todos los volúmenes se crearán sin hacer pausas.
+
+            En RAR predefinidamente los volúmenes tienen nombres similares a
+            'volname.partNNN.rar', donde NNN es el número del volumen. Para el
+            formato de archivo RAR 4.x si usa el modificador -vn es posible
+            seleccionar otro esquema para los nombres basado en la extensión,
+            donde el primer volumen, en un fichero multi-volumen determinado,
+            tiene la extensión .rar, y los siguientes volúmenes son numerados
+            como .r00 hasta .r99. Los archivos RAR 5.0 no soportan -vn ni los
+            nombres basados en la extensión.
+
+            Al extraer o comprobar un archivo multi-volumen, debe usar sólo el
+            nombre del primer volumen, si no hay siguiente volumen en la unidad
+            y el disco es extraíble, al usuario se le indicará:
+
+            Inserte el disco con <nombre del siguiente volumen>
+
+            Inserte el disco con el volumen correcto y pulse cualquier tecla.
+
+            Si al extraer, el siguiente volumen no se encuentra y los volúmenes
+            están colocados en el disco duro del PC, RAR abortará el proceso y
+            mostrará el mensaje de error:
+
+            No se puede encontrar <nombre de  volumen>
+
+            Los volúmenes del archivo no pueden modificarse. Las ordenes
+           'd', 'f', 'u', 's' no se pueden usar con conjuntos multi-volúmenes.
+            La orden 'a' puede usarse sólo para crear una nueva secuencia
+            multi-volumen.
+
+            Es posible, aunque improbable, que el tamaño del fichero, incluido
+            en un conjunto multivolumen, pudiera ser mayor que su tamaño no
+            comprimido. Esto es debido al hecho de que la opción 'almacenar' no
+            puede activarse en los conjuntos multi-volumen (no comprimir
+            si el tamaño aumenta).
+
+            Los volúmenes del archivo pueden ser auto-extraíbles (SFX). Para
+            crearlos debería usar los modificadores '-v' y '-sfx'.
+
+            Ejemplo:
+
+            crea un archivo en volúmenes de tamaño fijo:
+
+            rar a -s -v1440 floparch.rar *.*
+
+            se crearán volúmenes sólidos con un tamaño de 1440000 bytes.
+
+
+    -vd     Borrar el contenido del disco antes de crear un volumen
+
+            Todos los ficheros y directorios en el disco de destino se borrarán
+            al usar '-vd'. El modificador sólo puede aplicarse a medios
+            extraíbles, el disco duro no podrá borrarse al usar este modificador.
+
+
+    -ver[n] Control de versión de ficheros
+
+            Fuerza a RAR a conservar las anteriores versiones de los ficheros
+            al hacer una actualización de los mismos en el archivo existente.
+            La antiguas versiones son renombradas como 'filename;n', donde 'n'
+            es el número de versión.
+
+            Predefinidamente, al desempaquetar un archivo sin el modificador
+            -ver, RAR extrae sólo la última versión del fichero añadido, el
+            nombre no incluye un sufijo numérico. Pero si especifica un
+            nombre de fichero exactamente, incluida la versión, también
+            será desempaquetado. Por ejemplo, 'rar x arcname' desempaquetará
+            sólo las últimas versiones, mientras 'rar x arcname file.txt;5'
+            desempaquetará 'file.txt;5', si está presente en el archivo.
+
+            Si especifica el modificador -ver sin un modificador, al
+            desempaquetar, RAR extraerá todas las versiones de todos los
+            ficheros que coincidan con la máscara de fichero introducida. En
+            este caso el número de versión no es eliminada de los nombres de
+            fichero desempaquetados. También puede extraer una versión concreta
+            del fichero especificando su número como modificador -ver.
+            Le dirá a RAR que desempaquete sólo esta versión y elimine el número
+            de versión de los nombres del fichero. Por ejemplo, 'rar x -ver5
+            arcname' desempaquetará sólo las versiones 5 del fichero.
+
+            Si especifica el modificador 'n' al comprimir, limitará el número
+            máximo de versiones del fichero almacenadas en el archivo. Las
+            versiones antiguas del fichero que sobrepasen este umbral serán
+            eliminadas.
+
+
+    -vn     Usar la nomenclatura antigua de volúmenes
+
+            En RAR predefinidamente los volúmenes tienen nombres similares a
+            'volname.partNNN.rar', donde NNN es el número del volumen. Para el
+            formato de archivo RAR 4.x si usa el modificador -vn es posible
+            cambiarlo por otro modificador, usando la nomenclatura antigua de
+            volúmenes, donde el primer volumen, en un fichero multi-volumen
+            determinado, tiene la extensión .rar, y los siguientes volúmenes son
+            numerados como .r00 hasta .r99. Los archivos RAR 5.0 no soportan
+            -vn ni los nombres basados en la extensión.
+
+
+    -vp     Hacer una pausa antes de cada volumen
+
+            Por defecto RAR le pedirá confirmación antes de procesar el
+            siguiente volumen solo al comprimir en discos extraíbles y solo si
+            el espacio libre es menor que el tamaño de volumen. Este modificador
+            fuerza a RAR a pedir siempre la confirmación al crear o extraer
+            volúmenes. Por ejemplo, esto puede ser útil si desea copiar cada
+            volumen en distintas unidades inmediatamente después de crearlo.
+
+
+    -w<p>   Asignar el directorio de trabajo como <p>. Este modificador se usa
+            para asignar el directorio a los ficheros temporales.
+
+
+    -x<f>   Excluir el fichero o carpeta <f>. Pueden usarse comodines tanto en
+            la trayectoria como en el nombre de fichero. Puede especificar el
+            modificador '-x' varias veces para definir mas de una exclusión.
+
+
+            Si la máscara contiene comodines, se aplicarán al directorio actual
+            y a sus subdirectorios. No es recursivo sin comodines de forma que
+            "fichero" solo excluirá el fichero 'fichero' en la carpeta actual al
+            comprimir o en la carpeta raíz al descomprimir.
+
+            Use "*\fichero" para excluir el fichero "fichero" recursivamente
+            en todas las carpetas.
+
+            Si conoce la ruta exacta al fichero, puede usar la sintaxis
+            "ruta\fichero" para excluir sólo esta copia de "fichero". Si usa la
+            sintaxis -xruta\fichero al descomprimir un archivo, "ruta" debe ser
+            la ruta interna del archivo, no la ruta del fichero en el disco
+            después de descomprimirlo.
+
+            Por defecto, las mascaras que contienen comodines se aplican solo a
+            ficheros. Si necesita que una mascara con comodines que excluya
+            varias carpetas use la sintaxis especial de exclusión de carpetas.
+            Estas mascaras empiezan con el carácter separador de carpetas ('\'
+            en Windows y '/' en Unix). Por ejemplo, "*\tmp\" excluirá todas las
+            carpetas del tipo "*tmp*" y "*\tmp" excluirá solo las carpetas
+            llamadas "tmp". Al incluir comodines las dos mascaras se usarán con
+            el contenido de la carpeta actual y todas sus subcarpetas.
+
+            Si desea excluir solo una carpeta, especifique el nombre exacto de
+            esa carpeta incluyendo su trayectoria relativa o absoluta pero sin
+            usar comodines. En este caso no es necesario añadir el carácter
+            separador de carpetas, que solo es necesario para mascaras de
+            exclusión de carpetas con comodines para distinguirlas de las
+            mascaras de exclusión de ficheros.
+
+            Ejemplos:
+
+            1) rar a -r -x*.bak -x*.rar rawfiles
+
+            Los ficheros *.bak y *.rar no se añadirán a rawfiles
+
+            2) rar a -r -x*\temp -x*\temp\* savec c:\*
+
+            comprime todos los ficheros en el disco c: excepto los directorios
+            'temp' y los ficheros que se encuentran en su interior
+
+            3) rar x -x*.txt docs
+
+            extrae todos los ficheros de docs.rar excepto los *.txt
+
+
+    -x@<lf> Excluir ficheros listados en el fichero <lf>.
+
+            Si usa -x@ sin el modificador nombre de fichero lista, se leerán los
+            nombres del fichero introducido de forma estándar (stdin).
+
+            Ejemplo:
+
+            rar a -x@exlist.txt arch *.exe
+
+
+    -y      Responde Si a todas las preguntas.
+
+
+    -z[f]   Leer el comentario del archivo desde el fichero <f>.
+    
+				Este modificador puede usarse con cualquier modificador que
+				modifique el archivo para leer el comentario del archivo desde un
+				fichero y añadirlo al archivo. Use el modificador -sc si necesita
+				especificar el juego de carácteres para el comentario en el fichero
+				de texto. Si no se especifica <f>, el comentario se leerá de la
+				entrada estándar (stdin).
+
+
+
+ Limitaciones
+ ~~~~~~~~~~~~
+
+    Limitaciones de los órdenes:
+
+    Las ordenes 'd','u','f','c','cf' no funcionarán con archivos multi volumen.
+
+    La orden 'a' no puede ser usada para actualizar un archivo multi volumen,
+    sólo sirve para crear uno nuevo.
+
+
+ Valores de salida
+ ~~~~~~~~~~~~~~~~~
+
+    En caso de operación correcta RAR devuelve el código cero (0). Un código de
+    salida distinto de 0 indica algún tipo de error:
+
+    Valor  Descripción
+
+       0   Operación correcta.
+       1   Han sucedido error(es) no fatal(es).
+       2   Ha sucedido un error fatal.
+       3   Suma de control inválida, datos dañados.
+       4   Intento de modificar un archivo bloqueado con la orden 'k' .
+       5   Error de escritura del disco.
+       6   Error de apertura del fichero.
+       7   Error en los modificadores de la línea de órdenes.
+       8   No hay suficiente memoria para la operación.
+       9   Error al crear un fichero.
+      10   No se encontró ningún fichero que procesar.
+      11   Contraseña incorrecta.
+     255   Proceso detenido por el usuario.
+
+
+ Glosario
+ ~~~~~~~~
+
+    Archivo         Fichero especial que contiene uno o más ficheros,
+                    opcionalmente comprimido y/o codificado.
+
+    Compresión      Método de codificación de datos para reducir su tamaño.
+
+    Suma de control Es un cálculo de los valores de un bloque de datos o de un
+                    fichero que permite validar los datos o el fichero.
+
+    Archivo SFX     Archivo auto extraíble. Es un archivo en formato ejecutable,
+                    que consiste en un módulo auto extraíble seguido de los
+                    datos comprimidos. Es suficiente con ejecutar estos archivos
+                    para iniciar la extracción.
+
+    Sólido          Archivo empaquetado que usa un método de compresión especial
+                    que ve todos los ficheros como un flujo continuo de datos.
+                    Esto es particularmente ventajoso para empaquetar un gran
+                    número de ficheros pequeños.
+
+    Volumen         Parte de un archivo dividido. La división de un archivo en
+                    volúmenes, permite su almacenamiento en varios discos
+                    extraíbles. Los volúmenes sólidos tienen que descomprimirse
+                    empezando por el primer volumen.
+
+
+
+ Copyright
+
+    (c) 1993-2013 Alexander Roshal
