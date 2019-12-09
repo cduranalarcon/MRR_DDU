@@ -1,0 +1,12 @@
+*~
+*.pyc
+*.backup
+*.png
+*.nc
+*.kate-swp
+.nfs*
+*FRIEDHOF.py
+IMProToo.egg-info
+build
+dist
+.DS_Store
