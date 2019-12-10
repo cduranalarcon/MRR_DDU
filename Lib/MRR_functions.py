@@ -312,9 +312,20 @@ def save_Time_integ(file_out,tres = 1, mat = None, station=""):
         print "Data matrix not found!"
 
 #####
-def densplot(x,y,title="a)",bins = None, vmax = None, Range = None):
+def densplot(va1,var2,title="a)",bins = None,vmin = 0, vmax = None, Range = None, cbar_label='%',xlab = '',ylab = ''):
     import numpy as np
     import pylab
+    
+    #Reshape matriw to vectors
+    x = np.reshape(var1, np.size(var1))
+    y = np.reshape(var2, np.size(var2))
+    
+    #Index of no masked data
+    pix = np.where(x.mask == False)
+
+    #Only actual data
+    x = x[pix]
+    y = y[pix]
     
     def fmt(x, pos):
         a, b = '{:.1e}'.format(x).split('e')
@@ -326,21 +337,55 @@ def densplot(x,y,title="a)",bins = None, vmax = None, Range = None):
             return r'$'+str(a)+'\xc2\xb7'.decode('utf8')+' 10^{{'+str(b)+'}}$'
         else:
             return r'$'+str(0)+'$' 
-
+    
+    #2D histogram
     h=np.histogram2d(x,y,bins=bins,range=Range)
     histo_temp=np.ma.masked_where(h[0] <= 0, h[0])
-    extent = np.min(h[1]), np.max(h[1]), np.min(h[2]), np.max(h[2])
-
+    
+    #Convert counts in perceptage
     histo_temp=100*histo_temp/(1.*np.nansum(histo_temp))
 
     if vmax==None: vmax=np.max(histo_temp)
 
-    im=pylab.imshow(np.transpose(np.flip(((histo_temp)),1)),interpolation="nearest",
-                    aspect='auto',extent=extent,vmin=0,vmax=vmax)
+    # Plotting 2D histogram    
+    im=pylab.pcolor(np.linspace(h[1][0],h[1][-1],bins[0]),
+                    np.linspace(h[2][0],h[2][-1],bins[1]), 
+                    np.transpose(histo_temp),
+                    vmin=vmin,vmax=vmax)
+    pylab.xlabel(xlab)
+    pylab.ylabel(ylab)
+    pylab.colorbar(label = cbar_label)
+    pylab.title(title)
     
-    #im=pylab.pcolor(np.linspace(0,2,bins[0]),np.linspace(0,2.9,bins[1]),
-    #                np.transpose(histo_temp),vmin=0,vmax=vmax)
+    #Mean vertical profile
+    pmean = np.nanmean(var1,axis = 0)
     
-    if title != '': pylab.title(title)
-    print extent
+    #Percentile profiles    
+    p20 = []
+    p50 = []
+    p80 = []
+
+    for i in range(np.size(var1[1,:])):
+    
+        pix2 = np.where(var1[:,i].mask == False)
+        if np.size(pix2)>0:
+            p20.append(np.percentile(var1[:,i][pix2],20))
+            p50.append(np.percentile(var1[:,i][pix2],50))
+            p80.append(np.percentile(var1[:,i][pix2],80))
+                
+        else:
+            p20.append(-9999.)
+            p50.append(-9999.)
+            p80.append(-9999.)
+    
+    # Masking and computing Percentiles
+    p20 = np.ma.masked_where(np.array(p20) == -9999,np.array(p20))
+    p50 = np.ma.masked_where(np.array(p50) == -9999,np.array(p50))
+    p80 = np.ma.masked_where(np.array(p80) == -9999,np.array(p80))
+    
+    #Plotting vertical profiles
+    pylab.plot(pmean,var2[0], color = "black", linewidth = 2)
+    pylab.plot(p20,var2[0], color = "grey", linewidth = 2)
+    pylab.plot(p50,var2[0],'--', color = "black", linewidth = 2)
+    pylab.plot(p80,var2[0], color = "grey", linewidth = 2)
     return im   
