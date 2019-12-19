@@ -58,8 +58,42 @@ def raw2snow(file_in,file_out, TRES = 60, Descr = "MRR data", author = "C. Duran
     processedSpec.rawToSnow() # Converts RawData into Radar moments
     processedSpec.writeNetCDF(file_out,ncForm=ncForm) # Saves the processed data in a nc file    
 
-#Quicklooks of the MRR moments    
-def MRRQlooks(file_in, file_out,year, month, day, Ze_ranges = [-15, 20], W_ranges = [-3, 3], SW_ranges = [0, 2],format='png',dpi=300,name_station = '',max_h=3000, height_plot = False):
+#Quicklooks of the MRR moments 1st part.
+#Checks if the input data already exist.
+#Produce a Quicklook of from a nc file, if the plots does not already exist.  
+#Create output directories
+def QuickL(year, month, day, path, name_station = 'DDU', Ze_ranges = [-15, 30],W_ranges = [-6, 6], SW_ranges = [0, 1], cmap = 'jet',format = 'png',dpi=300):
+    #Import libraries
+    import sys, os
+    sys.path.append("lib/") # adding lib path
+    from MRR_functions import MRRQlooks # Automatic Quicklooks
+    
+    file_in = path+"MK_processed/"+str(year)+str(month).zfill(2)+"/"+name_station+"_"+str(year)+str(month).zfill(2)+str(day).zfill(2)+".nc"
+    fig_out = path+"Plots/"+str(year)+str(month).zfill(2)+"/"+name_station+"_"+str(year)+str(month).zfill(2)+str(day).zfill(2)
+
+    if (os.path.isfile(file_in) == True): #PRocess the data only if the input exist
+
+        if (os.path.isfile(fig_out+'.'+format) == False): #Processes the data only once
+
+            if os.path.exists(os.path.dirname(fig_out)) == False: os.mkdir(os.path.dirname(fig_out)) #Creates the output directory
+            ##See Quicklooks of the MRR moments 2nd part.    
+            MRRQlooks(file_in, fig_out,year, month, day, 
+                      Ze_ranges = Ze_ranges, 
+                      W_ranges = W_ranges, SW_ranges = SW_ranges, 
+                      format = format,
+                      dpi=dpi, 
+                      name_station = name_station,
+                      cmap = cmap) 
+            pylab.show()
+
+        else:
+            print "Figure ready "+str(year)+"/"+str(month).zfill(2)+"/"+str(day).zfill(2)
+    else:
+        print "NetCDF file not found "+str(year)+"/"+str(month).zfill(2)+"/"+str(day).zfill(2)    
+    
+    
+#Quicklooks of the MRR moments 2nd part.
+def MRRQlooks(file_in, file_out,year, month, day, Ze_ranges = [-15, 20], W_ranges = [-3, 3], SW_ranges = [0, 2],format='png',dpi=300,name_station = '',max_h=3000, height_plot = False, cmap = 'jet'):
     import numpy as np
     from netCDF4 import Dataset
     import matplotlib.dates as mdate
@@ -94,7 +128,7 @@ def MRRQlooks(file_in, file_out,year, month, day, Ze_ranges = [-15, 20], W_range
         if i == 2: vmMn = [W_ranges[0], W_ranges[1],r'$W$']    
         if i == 3: vmMn = [SW_ranges[0], SW_ranges[1],r'$\sigma$']    
 
-        pylab.pcolor(secs,h,np.transpose(mat[i-1]), vmin = vmMn[0],vmax = vmMn[1])
+        pylab.pcolor(secs,h,np.transpose(mat[i-1]), vmin = vmMn[0],vmax = vmMn[1],cmap = cmap)
 
         if i == 1:
             pylab.colorbar(label = r'$Z_e$'+" [dB"+r'$Z_e$'+"]")    
@@ -121,7 +155,7 @@ def MRRQlooks(file_in, file_out,year, month, day, Ze_ranges = [-15, 20], W_range
     if height_plot == True:
         fig, ax = pylab.subplots(figsize=(18,5))
     
-        pylab.pcolor(secs,range(31),np.transpose(H), vmin = np.nanmin(H),vmax = np.nanmax(H))
+        pylab.pcolor(secs,range(31),np.transpose(H), vmin = np.nanmin(H),vmax = np.nanmax(H),cmap = cmap)
     
         pylab.title(name_station+" - MRR, "+str(year).zfill(4)+"-"+str(month).zfill(2)+"-"+str(day).zfill(2))
         pylab.xlabel('Time [UTC]') 
@@ -312,7 +346,7 @@ def save_Time_integ(file_out,tres = 1, mat = None, station=""):
         print "Data matrix not found!"
 
 #####
-def densplot(va1,var2,title="a)",bins = None,vmin = 0, vmax = None, Range = None, cbar_label='%',xlab = '',ylab = ''):
+def densplot(var1,var2,title="a)",bins = None,vmin = 0, vmax = None, Range = None, cbar_label='%',xlab = '',ylab = '',cmap = 'jet'):
     import numpy as np
     import pylab
     
@@ -351,7 +385,7 @@ def densplot(va1,var2,title="a)",bins = None,vmin = 0, vmax = None, Range = None
     im=pylab.pcolor(np.linspace(h[1][0],h[1][-1],bins[0]),
                     np.linspace(h[2][0],h[2][-1],bins[1]), 
                     np.transpose(histo_temp),
-                    vmin=vmin,vmax=vmax)
+                    vmin=vmin,vmax=vmax, cmap = cmap)
     pylab.xlabel(xlab)
     pylab.ylabel(ylab)
     pylab.colorbar(label = cbar_label)
