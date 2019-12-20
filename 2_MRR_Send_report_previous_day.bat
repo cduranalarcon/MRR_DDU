@@ -1,2 +1,2 @@
 @ECHO OFF
-python Send_report_previous_day
+python MRR_Send_report_previous_day.py
