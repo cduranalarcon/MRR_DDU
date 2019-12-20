@@ -5,7 +5,7 @@ Codes to process MRR data at DDU
 
 "2_Send_report.bat" send the report by email.
 
-"MRR_processing.ipynb" is a jupyter notebook files to process and display data, .
+"Processing_MRR.ipynb" is a jupyter notebook files to process and display data, .
 
 Requirements:
 
