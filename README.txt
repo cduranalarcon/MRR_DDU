@@ -1,7 +1,5 @@
 "MRR_processing.ipynb" is a jupyter notebook files to process and display data.
 
-"MRR_processing.py" is similar to "MRR_processing.ipynb", but it can run from CMD, terminal, spyder, etc.
-
 Requirements:
 
 - Numpy
