@@ -1,11 +1,11 @@
-# MRR_DDU
+# MRR DDU
 Codes to process MRR data at DDU
 
 "1_MRR_processing.bat" activates automatically the report of the previous day.
 
 "2_Send_report.bat" send the report by email.
 
-"MRR_processing.ipynb" is a jupyter notebook files to process and display data.
+"MRR_processing.ipynb" is a jupyter notebook files to process and display data, .
 
 Requirements:
 
@@ -19,10 +19,10 @@ Requirements:
 
 Output folders are created automatically (Plots, MK_processed, temp).
 
-The used must define the name of the input directory and the first and last date of the dataset.
+The user have to check the name of the directories.
 
-You can copy the "RawSpectra" file from the MRR directly into "...MRR\Data\Station_Name" 
+The user can copy the "RawSpectra" folder from the MRR directly into "...MRR\Data\DDU" 
 
 There is no problem with gap of data.
 
-Any question can be addressed to claudio.duran@univ-grenoble-alpes.fr 
+Any question can be addressed to claudio.duran@univ-grenoble-alpes.fr or claudioduran@ug.uchile.cl 
