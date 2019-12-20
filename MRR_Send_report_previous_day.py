@@ -31,8 +31,8 @@ sendEmail = '/'.join(str(os.path.abspath('lib/Sendemail/sendEmail.exe')).split('
 attached1 = '/'.join(str(os.path.abspath(NC2transfer1)).split('\\'))
 attached2 = '/'.join(str(os.path.abspath(NC2transfer2)).split('\\'))
 
-FROM = "apres3@ddu.ipev.fr"
-TO = "claudio.duran@univ-grenoble-alpes.fr"
+FROM = "claudio.duran@univ-grenoble-alpes.fr"#"apres3@ddu.ipev.fr"
+TO = "claudioduran@ug.uchile.cl"#"claudio.duran@univ-grenoble-alpes.fr"
 SERVER = "smtp.ddu.ipev.fr:25"
 now = datetime.now()
 dt_string = now.strftime("%d/%m/%Y")
