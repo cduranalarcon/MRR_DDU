@@ -93,7 +93,42 @@ def QuickL(year, month, day, path, name_station = 'DDU',TRES = 60, Ze_ranges = [
             print "Figure ready "+str(year)+"/"+str(month).zfill(2)+"/"+str(day).zfill(2)+" "+str(int(TRES))+" seconds temporal resolution"
     else:
         print "NetCDF file not found "+str(year)+"/"+str(month).zfill(2)+"/"+str(day).zfill(2) +" "+str(int(TRES))+" seconds temporal resolution"   
+
+#Quicklooks of the MRR moments 1st part only report.
+#Checks if the input data already exist.
+#Produce a Quicklook of from a nc file, if the plots does not already exist.  
+#Create output directories
+def QuickL_report(year, month, day, name_station = 'DDU',TRES = 60, Ze_ranges = [-20, 20],W_ranges = [-3, 3], SW_ranges = [0, 1], S_ranges = [0, 0.5], cmap = 'jet',format = 'png',dpi=300):
+    #Import libraries
+    import sys, os
+    sys.path.append("lib/") # adding lib path
+    from MRR_functions import MRRQlooks # Automatic Quicklooks
+    import matplotlib.pyplot as plt
     
+    file_in = "Daily-schedules/"+name_station+"_"+str(year)+str(month).zfill(2)+str(day).zfill(2)+"_"+str(int(TRES))+"TRES_report.nc"
+    fig_out = "Daily-schedules/"+name_station+"_"+str(year)+str(month).zfill(2)+str(day).zfill(2)+"_"+str(int(TRES))+"TRES"
+
+    if (os.path.isfile(file_in) == True): #PRocess the data only if the input exist
+
+        if (os.path.isfile(fig_out+'.'+format) == False): #Processes the data only once
+
+            if os.path.exists(os.path.dirname(fig_out)) == False: os.mkdir(os.path.dirname(fig_out)) #Creates the output directory
+            ##See Quicklooks of the MRR moments 2nd part.    
+            MRRQlooks(file_in, fig_out,year, month, day, 
+                      Ze_ranges = Ze_ranges, 
+                      W_ranges = W_ranges, SW_ranges = SW_ranges,
+                      S_ranges = S_ranges,
+                      format = format,
+                      dpi=dpi, 
+                      name_station = name_station,
+                      cmap = cmap) 
+            plt.show()
+
+        else:
+            print "Figure ready "+str(year)+"/"+str(month).zfill(2)+"/"+str(day).zfill(2)+" "+str(int(TRES))+" seconds temporal resolution"
+    else:
+        print "NetCDF file not found "+str(year)+"/"+str(month).zfill(2)+"/"+str(day).zfill(2) +" "+str(int(TRES))+" seconds temporal resolution"   
+        
     
 #Quicklooks of the MRR moments 2nd part.
 def MRRQlooks(file_in, file_out,year, month, day, Ze_ranges = [-20, 20], W_ranges = [-3, 3], SW_ranges = [0, 1],S_ranges = [0, 0.5],format='png',dpi=300,name_station = '',max_h=3000, height_plot = False, cmap = 'jet'):
@@ -545,6 +580,119 @@ def MFDataset_save(fileout,ds_merged,format="NETCDF3_CLASSIC"):
     time.timezone = ds_merged.variables['time'].timezone    
 
     ds_merged2.close()
+
+# Saves a ncfile with less variables to send by email
+def CopyDataset_simpler(fileout,ds_merged,format="NETCDF3_CLASSIC"):
+    from netCDF4 import Dataset # Read and write ncCDF files
+    #Create new database
+    ds_merged2 = Dataset(fileout, 'w', format=format) 
+    ds_merged2.description = ds_merged.description+' Time merged'
+    ds_merged2.history = ds_merged.history
+    ds_merged2.author = ds_merged.author
+    ds_merged2.source = ds_merged.source + "CDA processing"
+    ds_merged2.properties = ds_merged.properties
+
+    # dimensions
+    ds_merged2.createDimension('time', None)
+    ds_merged2.createDimension('range', 31)
+    #ds_merged2.createDimension('velocity', 192)
+
+    # variables
+    time = ds_merged2.createVariable('time', 'int', ('time',),fill_value=-9999.)
+    range = ds_merged2.createVariable('range', 'int', ('range',),fill_value=-9999.)
+    quality = ds_merged2.createVariable('quality', 'int', ('time', 'range',),fill_value=-9999.)
+    #etaMask = ds_merged2.createVariable('etaMask', 'int', ('time', 'range','velocity'),fill_value=-9999.)
+    #velocity = ds_merged2.createVariable('velocity', 'f', ('velocity'),fill_value=-9999.) 
+    height = ds_merged2.createVariable('height', 'f', ('time','range'),fill_value=-9999.) 
+    #eta = ds_merged2.createVariable('eta', 'f', ('time','range','velocity'),fill_value=-9999.)  
+    #TF = ds_merged2.createVariable('TF', 'f', ('time','range'), fill_value=-9999.) 
+    Ze = ds_merged2.createVariable('Ze', 'f', ('time','range'), fill_value=-9999.) 
+    spectralWidth = ds_merged2.createVariable('spectralWidth', 'f', ('time','range'), fill_value=-9999.) 
+    #skewness = ds_merged2.createVariable('skewness', 'f', ('time','range'), fill_value=-9999.) 
+    #kurtosis = ds_merged2.createVariable('kurtosis', 'f', ('time','range'), fill_value=-9999.) 
+    #peakVelLeftBorder = ds_merged2.createVariable('peakVelLeftBorder', 'f', ('time', 'range'), fill_value=-9999.) 
+    #peakVelRightBorder = ds_merged2.createVariable('peakVelRightBorder', 'f', ('time','range'), fill_value=-9999.) 
+    #leftSlope = ds_merged2.createVariable('leftSlope', 'f', ('time','range'), fill_value=-9999.) 
+    #rightSlope = ds_merged2.createVariable('rightSlope', 'f', ('time','range'), fill_value=-9999.) 
+    W = ds_merged2.createVariable('W', 'f', ('time','range'), fill_value=-9999.) 
+    #etaNoiseAve = ds_merged2.createVariable('etaNoiseAve', 'f', ('time','range'), fill_value=-9999.) 
+    #etaNoiseStd = ds_merged2.createVariable('etaNoiseStd', 'f', ('time','range'), fill_value=-9999.) 
+    SNR = ds_merged2.createVariable('SNR', 'f', ('time','range'), fill_value=-9999.) 
+    S = ds_merged2.createVariable('S', 'f', ('time','range'), fill_value=-9999.) 
+
+    #Input Variables
+
+    time[:] = ds_merged.variables['time'][:]
+    range[:] = ds_merged.variables['range'][:]
+    quality[:] = ds_merged.variables['quality'][:]
+    #etaMask[:] = ds_merged.variables['etaMask'][:]
+    #velocity[:] = ds_merged.variables['velocity'][:]
+    height[:] = ds_merged.variables['height'][:]
+    #eta[:] = ds_merged.variables['eta'][:]
+    #TF[:] = ds_merged.variables['TF'][:]
+    Ze[:] = ds_merged.variables['Ze'][:]
+    spectralWidth[:] = ds_merged.variables['spectralWidth'][:]
+    #skewness[:] = ds_merged.variables['skewness'][:]
+    #kurtosis[:] = ds_merged.variables['kurtosis'][:]
+    #peakVelLeftBorder[:] = ds_merged.variables['peakVelLeftBorder'][:]
+    #peakVelRightBorder[:] = ds_merged.variables['peakVelRightBorder'][:]
+    #leftSlope[:] = ds_merged.variables['leftSlope'][:]
+    #rightSlope[:] = ds_merged.variables['rightSlope'][:]
+    W[:] = ds_merged.variables['W'][:]
+    #etaNoiseAve[:] = ds_merged.variables['etaNoiseAve'][:]
+    #etaNoiseStd[:] = ds_merged.variables['etaNoiseStd'][:]
+    SNR[:] = ds_merged.variables['SNR'][:]
+    S[:] = ds_merged.variables['S'][:]
+
+    # Variable Attributes
+
+    time.description = ds_merged.variables['time'].description
+    range.description = ds_merged.variables['range'].description
+    quality.description = ds_merged.variables['quality'].description
+    #etaMask.description = ds_merged.variables['etaMask'].description
+    #velocity.description = ds_merged.variables['velocity'].description
+    height.description = ds_merged.variables['height'].description
+    #eta.description = ds_merged.variables['eta'].description
+    #TF.description = ds_merged.variables['TF'].description
+    Ze.description = ds_merged.variables['Ze'].description
+    spectralWidth.description = ds_merged.variables['spectralWidth'].description
+    #skewness.description = ds_merged.variables['skewness'].description
+    #kurtosis.description = ds_merged.variables['kurtosis'].description
+    #peakVelLeftBorder.description = ds_merged.variables['peakVelLeftBorder'].description
+    #peakVelRightBorder.description = ds_merged.variables['peakVelRightBorder'].description
+    #leftSlope.description = ds_merged.variables['leftSlope'].description
+    #rightSlope.description = ds_merged.variables['rightSlope'].description
+    W.description = ds_merged.variables['W'].description
+    #etaNoiseAve.description = ds_merged.variables['etaNoiseAve'].description
+    #etaNoiseStd.description = ds_merged.variables['etaNoiseStd'].description
+    SNR.description = ds_merged.variables['SNR'].description
+    S.description = ds_merged.variables['S'].description
+
+    time.units = ds_merged.variables['time'].units
+    range.units = ds_merged.variables['range'].units
+    quality.units = ds_merged.variables['quality'].units
+    #etaMask.units = ds_merged.variables['etaMask'].units
+    #velocity.units = ds_merged.variables['velocity'].units
+    height.units = ds_merged.variables['height'].units
+    #eta.units = ds_merged.variables['eta'].units
+    #TF.units = ds_merged.variables['TF'].units
+    Ze.units = ds_merged.variables['Ze'].units
+    spectralWidth.units = ds_merged.variables['spectralWidth'].units
+    #skewness.units = ds_merged.variables['skewness'].units
+    #kurtosis.units = ds_merged.variables['kurtosis'].units
+    #peakVelLeftBorder.units = ds_merged.variables['peakVelLeftBorder'].units
+    #peakVelRightBorder.units = ds_merged.variables['peakVelRightBorder'].units
+    #leftSlope.units = ds_merged.variables['leftSlope'].units
+    #rightSlope.units = ds_merged.variables['rightSlope'].units
+    W.units = ds_merged.variables['W'].units
+    #etaNoiseAve.units = ds_merged.variables['etaNoiseAve'].units
+    #etaNoiseStd.units = ds_merged.variables['etaNoiseStd'].units
+    SNR.units = ds_merged.variables['SNR'].units
+    S.units = ds_merged.variables['S'].units
+    time.timezone = ds_merged.variables['time'].timezone    
+
+    ds_merged2.close()
+    
     
 #Create output directories    
 def mkfolders():
