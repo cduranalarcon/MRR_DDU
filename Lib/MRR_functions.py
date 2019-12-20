@@ -44,7 +44,8 @@ def check_RawFiles(filename, file_out):
 #Convert Raw MRR data into Doppler moments using IMProToo    
 #TRES = Temporal RESolution (60 s by default)
 def raw2snow(file_in,file_out, TRES = 60, Descr = "MRR data", author = "C. Duran-Alarcon, IGE - UGA",ncForm="NETCDF3_CLASSIC"): #convert raw files in MRR Doppler moments
-    import pylab, os, time, warnings, sys
+    import os, time, warnings, sys
+    import matplotlib.pyplot as plt
     path_IMProToo="lib/IMProToo-master/IMProToo/" #See more in https://github.com/maahn/IMProToo
     sys.path.append(path_IMProToo)
     import core as IMProToo # Minimum width of a peak set as 4 bins(instead of 3) to remove clutter at the expense of sensitivity      
@@ -62,14 +63,15 @@ def raw2snow(file_in,file_out, TRES = 60, Descr = "MRR data", author = "C. Duran
 #Checks if the input data already exist.
 #Produce a Quicklook of from a nc file, if the plots does not already exist.  
 #Create output directories
-def QuickL(year, month, day, path, name_station = 'DDU', Ze_ranges = [-15, 30],W_ranges = [-6, 6], SW_ranges = [0, 1], cmap = 'jet',format = 'png',dpi=300):
+def QuickL(year, month, day, path, name_station = 'DDU',TRES = 60, Ze_ranges = [-20, 20],W_ranges = [-3, 3], SW_ranges = [0, 1], S_ranges = [0, 0.5], cmap = 'jet',format = 'png',dpi=300):
     #Import libraries
     import sys, os
     sys.path.append("lib/") # adding lib path
     from MRR_functions import MRRQlooks # Automatic Quicklooks
+    import matplotlib.pyplot as plt
     
-    file_in = path+"MK_processed/"+str(year)+str(month).zfill(2)+"/"+name_station+"_"+str(year)+str(month).zfill(2)+str(day).zfill(2)+".nc"
-    fig_out = path+"Plots/"+str(year)+str(month).zfill(2)+"/"+name_station+"_"+str(year)+str(month).zfill(2)+str(day).zfill(2)
+    file_in = path+"MK_processed/"+str(year)+str(month).zfill(2)+"/"+name_station+"_"+str(year)+str(month).zfill(2)+str(day).zfill(2)+"_"+str(int(TRES))+"TRES.nc"
+    fig_out = path+"Plots/DopplerMoments_Precip/"+str(year)+str(month).zfill(2)+"/"+name_station+"_"+str(year)+str(month).zfill(2)+str(day).zfill(2)+"_"+str(int(TRES))+"TRES"
 
     if (os.path.isfile(file_in) == True): #PRocess the data only if the input exist
 
@@ -79,99 +81,105 @@ def QuickL(year, month, day, path, name_station = 'DDU', Ze_ranges = [-15, 30],W
             ##See Quicklooks of the MRR moments 2nd part.    
             MRRQlooks(file_in, fig_out,year, month, day, 
                       Ze_ranges = Ze_ranges, 
-                      W_ranges = W_ranges, SW_ranges = SW_ranges, 
+                      W_ranges = W_ranges, SW_ranges = SW_ranges,
+                      S_ranges = S_ranges,
                       format = format,
                       dpi=dpi, 
                       name_station = name_station,
                       cmap = cmap) 
-            pylab.show()
+            plt.show()
 
         else:
-            print "Figure ready "+str(year)+"/"+str(month).zfill(2)+"/"+str(day).zfill(2)
+            print "Figure ready "+str(year)+"/"+str(month).zfill(2)+"/"+str(day).zfill(2)+" "+str(int(TRES))+" seconds temporal resolution"
     else:
-        print "NetCDF file not found "+str(year)+"/"+str(month).zfill(2)+"/"+str(day).zfill(2)    
+        print "NetCDF file not found "+str(year)+"/"+str(month).zfill(2)+"/"+str(day).zfill(2) +" "+str(int(TRES))+" seconds temporal resolution"   
     
     
 #Quicklooks of the MRR moments 2nd part.
-def MRRQlooks(file_in, file_out,year, month, day, Ze_ranges = [-15, 20], W_ranges = [-3, 3], SW_ranges = [0, 2],format='png',dpi=300,name_station = '',max_h=3000, height_plot = False, cmap = 'jet'):
+def MRRQlooks(file_in, file_out,year, month, day, Ze_ranges = [-20, 20], W_ranges = [-3, 3], SW_ranges = [0, 1],S_ranges = [0, 0.5],format='png',dpi=300,name_station = '',max_h=3000, height_plot = False, cmap = 'jet'):
     import numpy as np
     from netCDF4 import Dataset
     import matplotlib.dates as mdate
-    import pylab
+    import matplotlib.pyplot as plt
 
     font = {'family'    :   'serif',
             'weight'    :   'normal',
             'size'      :   20}
 
-    pylab.rc('font', **font)        
+    plt.rc('font', **font)        
 
     ds = Dataset(file_in)
-
+    
     Ze = ds.variables["Ze"][:]
     W = ds.variables["W"][:]
     SW = ds.variables["spectralWidth"][:]
+    S = ds.variables["S"][:]
     Time = ds.variables["time"][:]
     H = ds.variables["height"][:]
 
     h = np.linspace(np.nanmin(H),np.nanmax(H),31)
 
-    mat = [Ze, W, SW]
+    mat = [Ze, W, SW, S]
 
     secs = mdate.epoch2num(Time)
 
-    fig = pylab.figure(figsize=(18,13))
+    fig = plt.figure(figsize=(18,18))
     
-    n = 3
-    for i in range(1,4):
+    n = 4
+    for i in range(1,5):
         ax = fig.add_subplot(n, 1, i)
         if i == 1: vmMn = [Ze_ranges[0], Ze_ranges[1],r'$Z_e$']  
         if i == 2: vmMn = [W_ranges[0], W_ranges[1],r'$W$']    
         if i == 3: vmMn = [SW_ranges[0], SW_ranges[1],r'$\sigma$']    
-
-        pylab.pcolor(secs,h,np.transpose(mat[i-1]), vmin = vmMn[0],vmax = vmMn[1],cmap = cmap)
+        if i == 4: vmMn = [S_ranges[0], S_ranges[1],'Snowfall rate']    
+            
+        plt.pcolor(secs,h,np.transpose(mat[i-1]), vmin = vmMn[0],vmax = vmMn[1],cmap = cmap)
 
         if i == 1:
-            pylab.colorbar(label = r'$Z_e$'+" [dB"+r'$Z_e$'+"]")    
-            pylab.title(name_station+" - MRR, "+str(year).zfill(4)+"-"+str(month).zfill(2)+"-"+str(day).zfill(2))
+            plt.colorbar(label = r'$Z_e$'+" [dB"+r'$Z_e$'+"]")    
+            plt.title(name_station+" - MRR, "+str(year).zfill(4)+"-"+str(month).zfill(2)+"-"+str(day).zfill(2))
         if i == 2:
-            pylab.colorbar(label = r'$W$'+" [m s"+r'$^{-1}$'+"]")    
+            plt.colorbar(label = r'$W$'+" [m s"+r'$^{-1}$'+"]")    
         if i == 3: 
-            pylab.xlabel('Time [UTC]') 
-            pylab.colorbar(label = r'$\sigma$'+" [m s"+r'$^{-1}$'+"]")
-        else: pylab.xlabel('')
-        pylab.ylabel('Height [m a.g.l.]')
+            plt.colorbar(label = r'$\sigma$'+" [m s"+r'$^{-1}$'+"]")
+        if i == 4:
+            plt.xlabel('Time [UTC]') 
+            plt.colorbar(label = 'Snowfall rate'+" [mm h"+r'$^{-1}$'+"]")    
+            
+        else: plt.xlabel('')
+        plt.ylabel('Height [m a.g.l.]')
 
-        pylab.text(secs[int(np.size(secs)/round(24*(secs[-1]-secs[0])))],h[3*np.size(h)/4],vmMn[2],size='x-large')
+        plt.text(secs[int(np.size(secs)/round(24*(secs[-1]-secs[0])))],h[3*np.size(h)/4],vmMn[2],size='x-large', color = "black")
         date_formatter = mdate.DateFormatter('%H')
         ax.xaxis.set_major_formatter(date_formatter)
         if round(24*(secs[-1]-secs[0]))< 24:
-            pylab.axis([round(secs[0],1),round(secs[-1],1),0,max_h])
+            plt.axis([round(secs[0],1),round(secs[-1],1),0,max_h])
         else:
-            pylab.axis([round(secs[0]),round(secs[-1]),0,max_h])
-            pylab.xticks(np.linspace(round(secs[0]),round(secs[-1]),13))
+            plt.axis([round(secs[0]),round(secs[-1]),0,max_h])
+            plt.xticks(np.linspace(round(secs[0]),round(secs[-1]),13))
 
-    pylab.savefig(file_out+".png",bbox_inches='tight',format='png',dpi=300)
+    plt.savefig(file_out+".png",bbox_inches='tight',format='png',dpi=300)
      
     if height_plot == True:
-        fig, ax = pylab.subplots(figsize=(18,5))
+        fig, ax = plt.subplots(figsize=(18,5))
     
-        pylab.pcolor(secs,range(31),np.transpose(H), vmin = np.nanmin(H),vmax = np.nanmax(H),cmap = cmap)
+        plt.pcolor(secs,range(31),np.transpose(H), vmin = np.nanmin(H),vmax = np.nanmax(H),cmap = cmap)
     
-        pylab.title(name_station+" - MRR, "+str(year).zfill(4)+"-"+str(month).zfill(2)+"-"+str(day).zfill(2))
-        pylab.xlabel('Time [UTC]') 
-        pylab.colorbar(label = 'Range [m a.g.l.]')
-        pylab.ylabel('Range [m]')
+        plt.title(name_station+" - MRR, "+str(year).zfill(4)+"-"+str(month).zfill(2)+"-"+str(day).zfill(2))
+        plt.xlabel('Time [UTC]') 
+        plt.colorbar(label = 'Range [m a.g.l.]')
+        plt.ylabel('Range [m]')
     
-        pylab.text(secs[int(np.size(secs)/round(24*(secs[-1]-secs[0])))],range(31)[3*np.size(h)/4],'Range',size='x-large')
+        plt.text(secs[int(np.size(secs)/round(24*(secs[-1]-secs[0])))],range(31)[3*np.size(h)/4],'Range',size='x-large')
         date_formatter = mdate.DateFormatter('%H')
         ax.xaxis.set_major_formatter(date_formatter)
         if round(24*(secs[-1]-secs[0]))< 24:
-            pylab.axis([round(secs[0],1),round(secs[-1],1),0,30])
+            plt.axis([round(secs[0],1),round(secs[-1],1),0,30])
         else:
-            pylab.axis([round(secs[0]),round(secs[-1]),0,30])
-            pylab.xticks(np.linspace(round(secs[0]),round(secs[-1]),13))
+            plt.axis([round(secs[0]),round(secs[-1]),0,30])
+            plt.xticks(np.linspace(round(secs[0]),round(secs[-1]),13))
     
-        pylab.savefig(file_out+'_h.png',bbox_inches='tight',format=format,dpi=dpi)
+        plt.savefig(file_out+'_h.png',bbox_inches='tight',format=format,dpi=dpi)
     ds.close()
 #Intersection between two lists    
 def intersect(a, b):
@@ -180,7 +188,8 @@ def intersect(a, b):
 #Temporal integration from 1min to x-h. Default 1-h
 def Time_integ(tres = 1.,file_in = None, date_ini_str = None,date_end_str = None, scale = 1,offset = 0):
     import numpy as np
-    import datetime, calendar, pylab,sys, time
+    import datetime, calendar,sys, time
+    import matplotlib.pyplot as plt
     from netCDF4 import Dataset
     #tres: Output temporal resolution
     if file_in != None:
@@ -277,7 +286,7 @@ def Time_integ(tres = 1.,file_in = None, date_ini_str = None,date_end_str = None
 #Saving time agregated profiles as nc file 
 def save_Time_integ(file_out,tres = 1, mat = None, station=""):
     import numpy as np
-    from netCDF4 import Dataset
+    from netCDF4 import Dataset # Read and write ncCDF files
     if mat != None:
         root_grp = Dataset(file_out, 'w', format="NETCDF3_CLASSIC")
         root_grp.description = station+' MRR moments, '+str(int(tres))+'-h temporal resolution'
@@ -348,7 +357,8 @@ def save_Time_integ(file_out,tres = 1, mat = None, station=""):
 #####
 def densplot(var1,var2,title="a)",bins = None,vmin = 0, vmax = None, Range = None, cbar_label='%',xlab = '',ylab = '',cmap = 'jet'):
     import numpy as np
-    import pylab
+    import matplotlib.pyplot as plt
+    from netCDF4 import Dataset # Read and write ncCDF files
     
     #Reshape matriw to vectors
     x = np.reshape(var1, np.size(var1))
@@ -382,14 +392,14 @@ def densplot(var1,var2,title="a)",bins = None,vmin = 0, vmax = None, Range = Non
     if vmax==None: vmax=np.max(histo_temp)
 
     # Plotting 2D histogram    
-    im=pylab.pcolor(np.linspace(h[1][0],h[1][-1],bins[0]),
+    im=plt.pcolor(np.linspace(h[1][0],h[1][-1],bins[0]),
                     np.linspace(h[2][0],h[2][-1],bins[1]), 
                     np.transpose(histo_temp),
                     vmin=vmin,vmax=vmax, cmap = cmap)
-    pylab.xlabel(xlab)
-    pylab.ylabel(ylab)
-    pylab.colorbar(label = cbar_label)
-    pylab.title(title)
+    plt.xlabel(xlab)
+    plt.ylabel(ylab)
+    plt.colorbar(label = cbar_label)
+    plt.title(title)
     
     #Mean vertical profile
     pmean = np.nanmean(var1,axis = 0)
@@ -418,8 +428,277 @@ def densplot(var1,var2,title="a)",bins = None,vmin = 0, vmax = None, Range = Non
     p80 = np.ma.masked_where(np.array(p80) == -9999,np.array(p80))
     
     #Plotting vertical profiles
-    pylab.plot(pmean,var2[0], color = "black", linewidth = 2)
-    pylab.plot(p20,var2[0], color = "grey", linewidth = 2)
-    pylab.plot(p50,var2[0],'--', color = "black", linewidth = 2)
-    pylab.plot(p80,var2[0], color = "grey", linewidth = 2)
+    plt.plot(pmean,var2[0], color = "black", linewidth = 2)
+    plt.plot(p20,var2[0], color = "grey", linewidth = 2)
+    plt.plot(p50,var2[0],'--', color = "black", linewidth = 2)
+    plt.plot(p80,var2[0], color = "grey", linewidth = 2)
     return im   
+
+# Saves Multiple netCDF files
+def MFDataset_save(fileout,ds_merged,format="NETCDF3_CLASSIC"):
+    from netCDF4 import Dataset # Read and write ncCDF files
+    #Create new database
+    ds_merged2 = Dataset(fileout, 'w', format=format) 
+    ds_merged2.description = ds_merged.description+' Time merged'
+    ds_merged2.history = ds_merged.history
+    ds_merged2.author = ds_merged.author
+    ds_merged2.source = ds_merged.source + "CDA processing"
+    ds_merged2.properties = ds_merged.properties
+
+    # dimensions
+    ds_merged2.createDimension('time', None)
+    ds_merged2.createDimension('range', 31)
+    ds_merged2.createDimension('velocity', 192)
+
+    # variables
+    time = ds_merged2.createVariable('time', 'int', ('time',),fill_value=-9999.)
+    range = ds_merged2.createVariable('range', 'int', ('range',),fill_value=-9999.)
+    quality = ds_merged2.createVariable('quality', 'int', ('time', 'range',),fill_value=-9999.)
+    etaMask = ds_merged2.createVariable('etaMask', 'int', ('time', 'range','velocity'),fill_value=-9999.)
+    velocity = ds_merged2.createVariable('velocity', 'f', ('velocity'),fill_value=-9999.) 
+    height = ds_merged2.createVariable('height', 'f', ('time','range'),fill_value=-9999.) 
+    eta = ds_merged2.createVariable('eta', 'f', ('time','range','velocity'),fill_value=-9999.)  
+    TF = ds_merged2.createVariable('TF', 'f', ('time','range'), fill_value=-9999.) 
+    Ze = ds_merged2.createVariable('Ze', 'f', ('time','range'), fill_value=-9999.) 
+    spectralWidth = ds_merged2.createVariable('spectralWidth', 'f', ('time','range'), fill_value=-9999.) 
+    skewness = ds_merged2.createVariable('skewness', 'f', ('time','range'), fill_value=-9999.) 
+    kurtosis = ds_merged2.createVariable('kurtosis', 'f', ('time','range'), fill_value=-9999.) 
+    peakVelLeftBorder = ds_merged2.createVariable('peakVelLeftBorder', 'f', ('time', 'range'), fill_value=-9999.) 
+    peakVelRightBorder = ds_merged2.createVariable('peakVelRightBorder', 'f', ('time','range'), fill_value=-9999.) 
+    leftSlope = ds_merged2.createVariable('leftSlope', 'f', ('time','range'), fill_value=-9999.) 
+    rightSlope = ds_merged2.createVariable('rightSlope', 'f', ('time','range'), fill_value=-9999.) 
+    W = ds_merged2.createVariable('W', 'f', ('time','range'), fill_value=-9999.) 
+    etaNoiseAve = ds_merged2.createVariable('etaNoiseAve', 'f', ('time','range'), fill_value=-9999.) 
+    etaNoiseStd = ds_merged2.createVariable('etaNoiseStd', 'f', ('time','range'), fill_value=-9999.) 
+    SNR = ds_merged2.createVariable('SNR', 'f', ('time','range'), fill_value=-9999.) 
+    S = ds_merged2.createVariable('S', 'f', ('time','range'), fill_value=-9999.) 
+
+    #Input Variables
+
+    time[:] = ds_merged.variables['time'][:]
+    range[:] = ds_merged.variables['range'][:]
+    quality[:] = ds_merged.variables['quality'][:]
+    etaMask[:] = ds_merged.variables['etaMask'][:]
+    velocity[:] = ds_merged.variables['velocity'][:]
+    height[:] = ds_merged.variables['height'][:]
+    eta[:] = ds_merged.variables['eta'][:]
+    TF[:] = ds_merged.variables['TF'][:]
+    Ze[:] = ds_merged.variables['Ze'][:]
+    spectralWidth[:] = ds_merged.variables['spectralWidth'][:]
+    skewness[:] = ds_merged.variables['skewness'][:]
+    kurtosis[:] = ds_merged.variables['kurtosis'][:]
+    peakVelLeftBorder[:] = ds_merged.variables['peakVelLeftBorder'][:]
+    peakVelRightBorder[:] = ds_merged.variables['peakVelRightBorder'][:]
+    leftSlope[:] = ds_merged.variables['leftSlope'][:]
+    rightSlope[:] = ds_merged.variables['rightSlope'][:]
+    W[:] = ds_merged.variables['W'][:]
+    etaNoiseAve[:] = ds_merged.variables['etaNoiseAve'][:]
+    etaNoiseStd[:] = ds_merged.variables['etaNoiseStd'][:]
+    SNR[:] = ds_merged.variables['SNR'][:]
+    S[:] = ds_merged.variables['S'][:]
+
+    # Variable Attributes
+
+    time.description = ds_merged.variables['time'].description
+    range.description = ds_merged.variables['range'].description
+    quality.description = ds_merged.variables['quality'].description
+    etaMask.description = ds_merged.variables['etaMask'].description
+    velocity.description = ds_merged.variables['velocity'].description
+    height.description = ds_merged.variables['height'].description
+    eta.description = ds_merged.variables['eta'].description
+    TF.description = ds_merged.variables['TF'].description
+    Ze.description = ds_merged.variables['Ze'].description
+    spectralWidth.description = ds_merged.variables['spectralWidth'].description
+    skewness.description = ds_merged.variables['skewness'].description
+    kurtosis.description = ds_merged.variables['kurtosis'].description
+    peakVelLeftBorder.description = ds_merged.variables['peakVelLeftBorder'].description
+    peakVelRightBorder.description = ds_merged.variables['peakVelRightBorder'].description
+    leftSlope.description = ds_merged.variables['leftSlope'].description
+    rightSlope.description = ds_merged.variables['rightSlope'].description
+    W.description = ds_merged.variables['W'].description
+    etaNoiseAve.description = ds_merged.variables['etaNoiseAve'].description
+    etaNoiseStd.description = ds_merged.variables['etaNoiseStd'].description
+    SNR.description = ds_merged.variables['SNR'].description
+    S.description = ds_merged.variables['S'].description
+
+    time.units = ds_merged.variables['time'].units
+    range.units = ds_merged.variables['range'].units
+    quality.units = ds_merged.variables['quality'].units
+    etaMask.units = ds_merged.variables['etaMask'].units
+    velocity.units = ds_merged.variables['velocity'].units
+    height.units = ds_merged.variables['height'].units
+    eta.units = ds_merged.variables['eta'].units
+    TF.units = ds_merged.variables['TF'].units
+    Ze.units = ds_merged.variables['Ze'].units
+    spectralWidth.units = ds_merged.variables['spectralWidth'].units
+    skewness.units = ds_merged.variables['skewness'].units
+    kurtosis.units = ds_merged.variables['kurtosis'].units
+    peakVelLeftBorder.units = ds_merged.variables['peakVelLeftBorder'].units
+    peakVelRightBorder.units = ds_merged.variables['peakVelRightBorder'].units
+    leftSlope.units = ds_merged.variables['leftSlope'].units
+    rightSlope.units = ds_merged.variables['rightSlope'].units
+    W.units = ds_merged.variables['W'].units
+    etaNoiseAve.units = ds_merged.variables['etaNoiseAve'].units
+    etaNoiseStd.units = ds_merged.variables['etaNoiseStd'].units
+    SNR.units = ds_merged.variables['SNR'].units
+    S.units = ds_merged.variables['S'].units
+    time.timezone = ds_merged.variables['time'].timezone    
+
+    ds_merged2.close()
+    
+#Create output directories    
+def mkfolders():
+    import os
+
+    if os.path.exists(os.path.dirname('Data/DDU/MK_processed/')) == False: 
+        os.mkdir(os.path.dirname('Data/DDU/MK_processed/')) 
+    if os.path.exists(os.path.dirname('Data/DDU/Plots/')) == False: 
+        os.mkdir(os.path.dirname('Data/DDU/Plots/')) 
+    if os.path.exists(os.path.dirname('Data/DDU/temp/')) == False: 
+        os.mkdir(os.path.dirname('Data/DDU/temp/')) 
+    if os.path.exists(os.path.dirname('Data/DDU/Plots/DopplerMoments_Precip/')) == False: 
+        os.mkdir(os.path.dirname('Data/DDU/Plots/DopplerMoments_Precip/')) 
+    if os.path.exists(os.path.dirname('Data/DDU/Plots/Vertical_profiles/')) == False: 
+        os.mkdir(os.path.dirname('Data/DDU/Plots/Vertical_profiles/')) 
+    if os.path.exists(os.path.dirname('Data/DDU/MK_processed/TimeMerged/')) == False: 
+        os.mkdir(os.path.dirname('Data/DDU/MK_processed/TimeMerged/')) 
+    
+#Make a list of day between two dates     
+def find_dates_btw(date_ini,date_end):
+    import time
+    from calendar import timegm
+    import numpy as np
+    
+    utc_ini = time.strptime(date_ini, "%Y-%m-%d")
+    epoch_ini = timegm(utc_ini)
+    utc_end = time.strptime(date_end, "%Y-%m-%d")
+    epoch_end = timegm(utc_end)
+
+    ndays = int((epoch_end-epoch_ini)//(24*3600.) + 1 )
+
+    epochs = np.linspace(epoch_ini,epoch_end,ndays)
+    timestamps = [time.strftime("%Y%m%d", time.gmtime(epochs[i])) for i in range(ndays)]
+    
+    return [epochs,timestamps]
+
+
+#input (modified by the user)
+###################
+#name = "2018-01-04 02:40:00" #format "%Y-%m-%d %H%M%S" #UTC time
+#name2 = name[0:4]+"-"+name[5:7]+"-"+name[8:10]+"_"+name[11:13]+name[14:16]+name[17:19] 
+#filename = "c:/temp/20180104/IMProToo_MRR_0104.nc" #directory of the netcdf file
+#e_factor = 0.001 #exaggeration of the curves 
+#path_out = "C:/temp/20180104/"+name2+"_MK12.png"
+#xmin = -6
+#xmax = 12
+#ymin = 0 
+#ymax = 3.2 
+#mMZe = [-20,20]
+#mMW = [-2,2]
+##################
+
+def plot_spectra(date_central="2017-02-08 02:40:00",tw=3,e_factor=0.01,xmin=-6,xmax=12,ymin=0,ymax=3.2,mMZe=[-20,20],mMW=[-2,2],path='Data/DDU/MK_processed/',TRES=60):
+    #tw = temporal window
+    #date_central = "%Y-%m-%d %H:%M:%S"
+    from netCDF4 import Dataset
+    from calendar import timegm
+    import pylab, time
+    import numpy as np
+    
+    #Font format
+    font = {'family' : 'serif',
+            'weight' : 'normal',
+            'size'   : 15}
+
+    pylab.rc('font', **font)
+
+    ##Date time
+    utc_time = time.strptime(date_central, "%Y-%m-%d %H:%M:%S")
+    epoch_time = timegm(utc_time)    
+
+    dday = time.strftime("%Y%m%d", time.gmtime(epoch_time))
+    
+    filename = path + dday[:6]+'/'+'DDU_'+dday+'_'+str(int(TRES))+'TRES.nc'
+    
+    #Open dataset
+    dataset = Dataset(filename)
+
+    #reading variables
+    ##W = dataset.variables["W"][:]
+    ##spectralWidth = dataset.variables["spectralWidth"][:]
+    ##SNR = dataset.variables["SNR"][:]
+    ##quality = dataset.variables["quality"][:]
+    H = dataset.variables["height"][:]
+    Time = dataset.variables["time"][:]
+
+    #t = Time[1000]
+
+    
+    pixint=np.where(min(abs(Time-epoch_time))==abs(Time-epoch_time))[0][0]
+    eta = dataset.variables["eta"][pixint-tw+1:pixint+1,:,:]
+    etaMask = dataset.variables["etaMask"][pixint-tw+1:pixint+1,:,:]
+    Ze2 = np.nanmean(dataset.variables["Ze"][pixint-tw+1:pixint+1,:],axis=0)
+
+    eta=np.nanmean(eta,axis=0)
+    etaMask=np.nanmean(etaMask,axis=0)
+
+    # conversion into dZe/dv
+    lamb=299792458./24.15e9 #wavelenght
+    K2 = 0.92 
+    eta=10**18*(lamb**4*eta/(np.pi**5*0.92))
+    dv=0.1893669
+    vf=dv*(np.linspace(0,191,192)-64)
+
+    #masking noise
+    etaM=np.ma.masked_where(etaMask==1, eta)                
+    etaM2=np.ma.masked_where((1-etaMask)==1, eta)                
+
+    f, axarr = pylab.subplots(1,2, sharey='row',figsize=(12,8))
+
+    Ze=[]
+    Ze.append(-9999)
+    Ze.append(-9999)
+    Ze.append(-9999)
+
+    #Plotting
+    pylab.axes(axarr[0])
+
+    for ih in range(3,31):
+        pylab.plot(vf,(etaM[ih,:]-np.nanmin(etaM2[ih,64:128]))*e_factor+0.1*ih,color="black")
+        pylab.plot(vf,(eta[ih,:]-np.nanmin(etaM2[ih,64:128]))*e_factor+0.1*ih,":",color="black")
+        #print np.nanmin(etaM[ih,:]-np.nanmean(etaM2[ih,:])),np.nanmax(etaM[ih,:]-np.nanmean(etaM2[ih,:]))
+        if (np.nansum(etaM[ih,:]) != np.nan):
+            Ze.append(10*np.log10(np.nansum(etaM[ih,:])))
+        else:
+            Ze.append(-9999)
+
+    Ze = np.array(Ze)
+    Ze = np.ma.masked_where(Ze==-9999, Ze)                
+ 
+    W = np.zeros(shape=np.shape(Ze))
+
+    nv = 0
+    for v in vf:
+        W = W + etaM[:,nv].filled(0)*v
+        nv = nv + 1
+
+    W = W/10.**(Ze/10.)
+
+    pylab.axis([xmin,xmax,ymin,ymax])
+    pylab.xlabel("Doppler velocity [m s"+r'$^{-1}$'+"]")
+    pylab.ylabel("Height [m]")
+    pylab.title("MK12 spectra "+ date_central)
+    pylab.axes(axarr[1])
+    p1,=pylab.plot(W,H[0]/1000., color='red',label="W")    
+    pylab.xlabel("W [m s"+r'$^{-1}$'+"]")
+    pylab.axis([mMW[0],mMW[1],ymin,ymax])
+    ax=axarr[1].twiny()
+    p2,=ax.plot(Ze,H[0]/1000., color='blue',label="Ze")  
+    ax.set_xlabel("Ze [dBZe]")  
+    pylab.axis([mMZe[0],mMZe[1],ymin,ymax])
+    pylab.legend(handles=[p1, p2],frameon=False)
+    #pylab.savefig(path_out,format="png",bbox_inches = 'tight', dpi=600)
+    pylab.show()
+
+    #for i in range(31):
+    #    print i, Ze2.filled(-9999)[i]
