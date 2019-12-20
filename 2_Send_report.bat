@@ -1,2 +1,0 @@
-@ECHO OFF
-python Send_report_previous_day
