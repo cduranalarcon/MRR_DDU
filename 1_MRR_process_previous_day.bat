@@ -1,2 +1,2 @@
 @ECHO OFF
-python MRR_previous_day.py
+python MRR_process_previous_day.py
